@@ -1,0 +1,289 @@
+.page {
+  display: flex;
+  width: min(100%, 920px);
+  flex-direction: column;
+  gap: 22px;
+  margin: 0 auto;
+}
+
+.integrationsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.integrationHeading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.integrationHeading h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.35px;
+}
+
+.integrationHeading p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  color: var(--foreground);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 400;
+  letter-spacing: -1px;
+  line-height: 1.12;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 1.2px;
+}
+
+.intro {
+  margin: 9px 0 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.connectionCard,
+.syncCard {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.connectionCard {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.calendarIcon,
+.syncIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  color: var(--primary);
+  background: color-mix(in oklch, var(--primary) 10%, var(--card));
+}
+
+.calendarIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.calendarIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.cardHeading {
+  min-width: 0;
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleRow h3,
+.syncCard h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.35px;
+}
+
+.cardHeading > p,
+.syncCard p {
+  margin: 7px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.statusPill {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted-foreground);
+  background: var(--background);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.statusConnected {
+  border-color: color-mix(in oklch, var(--primary) 28%, var(--border));
+  color: var(--primary);
+  background: color-mix(in oklch, var(--primary) 8%, var(--card));
+}
+
+.statusAttention {
+  border-color: color-mix(in oklch, var(--destructive) 30%, var(--border));
+  color: var(--destructive);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.details div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.details dt {
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+
+.details dd {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 17px;
+}
+
+.calendarLink {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.calendarLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.calendarLink svg {
+  width: 13px;
+  height: 13px;
+}
+
+.note {
+  margin: 17px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.syncCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px 20px;
+}
+
+.syncIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.syncIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.feedback,
+.feedbackError {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in oklch, var(--primary) 25%, var(--border));
+  border-radius: 9px;
+  color: var(--foreground);
+  background: color-mix(in oklch, var(--primary) 7%, var(--card));
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.feedbackError {
+  border-color: color-mix(in oklch, var(--destructive) 28%, var(--border));
+  color: var(--destructive);
+  background: color-mix(in oklch, var(--destructive) 5%, var(--card));
+}
+
+@media (max-width: 540px) {
+  .page {
+    gap: 16px;
+  }
+
+  .cardHeader {
+    gap: 11px;
+  }
+
+  .titleRow h3,
+  .syncCard h2 {
+    font-size: 19px;
+  }
+
+  .details {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    align-items: stretch;
+  }
+
+  .actions > * {
+    justify-content: center;
+  }
+}
