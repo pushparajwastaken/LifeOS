@@ -526,7 +526,7 @@
   .dashboard-pillar-chart { margin-top: 12px; }
   .dashboard-footer { flex-direction: column; gap: 6px; }
   .mobile-nav { height: calc(62px + env(safe-area-inset-bottom, 0px)); padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px)); }
-  .mobile-nav-item { min-width: 64px; min-height: 44px; justify-content: center; gap: 4px; font-size: 9px; }
+  .mobile-nav-item { min-width: 0; flex: 1 1 0; min-height: 44px; justify-content: center; gap: 4px; font-size: 9px; }
   .icon-button { width: 42px; height: 42px; }
 }
 
