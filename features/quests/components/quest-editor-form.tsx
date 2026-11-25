@@ -62,7 +62,7 @@ export function QuestEditorForm({ action, quest, submitLabel, pendingLabel }: Qu
         <Field>
           <FieldLabel htmlFor={`${prefix}-weekly`}>Weekly learning target (minutes)</FieldLabel>
           <Input id={`${prefix}-weekly`} name="weeklyTargetMinutes" type="number" inputMode="numeric" min={1} max={QUEST_LIMITS.weeklyTargetMinutes} step={1} defaultValue={quest?.weekly_target_minutes ?? ''} placeholder="Optional" />
-          <FieldDescription>Optional. Progress against it appears once learning sessions are available.</FieldDescription>
+          <FieldDescription>Optional. The quest page compares this week’s logged sessions against it.</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${prefix}-target`}>Target date</FieldLabel>

@@ -20,6 +20,7 @@ import {
   Moon,
   Sparkles,
   Sun,
+  Timer,
   Settings2,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
@@ -48,6 +49,7 @@ const pillarLinks = [
 const growthLinks = [
   { label: 'Goals', href: '/goals', icon: Goal },
   { label: 'Side Quests', href: '/quests', icon: MapIcon },
+  { label: 'Learning log', href: '/learning', icon: Timer },
   { label: 'Library', href: '/library', icon: BookMarked },
   { label: 'Knowledge vault', href: '/knowledge', icon: Library },
   { label: 'Analytics', href: '/analytics', icon: Activity },

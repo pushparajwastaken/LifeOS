@@ -16,6 +16,8 @@ import styles from '../quests.module.css'
 import { MilestonesPanel, ObjectivesPanel } from './quest-checklists'
 import { QuestEditorForm } from './quest-editor-form'
 import { QuestNotesPanel } from './quest-notes-panel'
+import { QuestSessionsPanel } from '@/features/learning/components/quest-sessions-panel'
+import type { QuestSessionSummary } from '@/features/learning/learning-service'
 import { SubmitButton } from './submit-button'
 
 const TRANSITION_LABELS: Record<QuestStatus, string> = {
@@ -25,9 +27,9 @@ const TRANSITION_LABELS: Record<QuestStatus, string> = {
   completed: 'Mark completed',
 }
 
-export function QuestDetail({ data, timeZone, notice }: { data: QuestDetailData; timeZone: string; notice?: string }) {
+export function QuestDetail({ data, sessions, timeZone, notice, undoId }: { data: QuestDetailData; sessions: QuestSessionSummary; timeZone: string; notice?: string; undoId?: string }) {
   const { quest, progress } = data
-  const message = resolveNotice(notice)
+  const message = notice === 'session-deleted' ? null : resolveNotice(notice)
   const transitions = getAllowedQuestTransitions(quest.status)
   const facts: Array<[string, string]> = [
     ['Structure', QUEST_STRUCTURE_LABELS[quest.structure]],
@@ -74,6 +76,7 @@ export function QuestDetail({ data, timeZone, notice }: { data: QuestDetailData;
               </p>
             )}
           </section>
+          <QuestSessionsPanel quest={quest} summary={sessions} timeZone={timeZone} undoId={notice === 'session-deleted' ? undoId : undefined} />
           <ObjectivesPanel questId={quest.id} objectives={data.objectives} timeZone={timeZone} />
           <MilestonesPanel questId={quest.id} milestones={data.milestones} timeZone={timeZone} structured={quest.structure === 'structured'} />
         </div>
