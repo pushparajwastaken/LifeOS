@@ -5,6 +5,7 @@ import { QUEST_PILLAR_LABELS, type QuestPillar } from '@/features/quests/quest-d
 import styles from '@/features/quests/quests.module.css'
 import { deleteSessionAction, updateSessionAction } from '../learning-actions'
 import { SESSION_TYPE_LABELS, formatDuration, groupByLocalDate } from '../learning-domain'
+import type { ResourceOption } from '@/features/resources/resource-service'
 import type { QuestOption, SessionView } from '../learning-service'
 import { SessionForm } from './session-form'
 
@@ -14,7 +15,13 @@ type SessionListProps = {
   today: string
   returnTo: string
   quests: QuestOption[]
+  resources?: ResourceOption[]
   showQuest: boolean
+}
+
+function resourceTitleFor(session: SessionView, resources: ResourceOption[]): string | null {
+  if (!session.resource_id) return null
+  return session.resourceTitle ?? resources.find((resource) => resource.id === session.resource_id)?.title ?? null
 }
 
 function formatDay(dateKey: string, today: string): string {
@@ -22,7 +29,7 @@ function formatDay(dateKey: string, today: string): string {
   return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${dateKey}T00:00:00Z`))
 }
 
-export function SessionList({ sessions, timeZone, today, returnTo, quests, showQuest }: SessionListProps) {
+export function SessionList({ sessions, timeZone, today, returnTo, quests, resources = [], showQuest }: SessionListProps) {
   const timeFormat = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: '2-digit' })
   return (
     <div>
@@ -46,6 +53,7 @@ export function SessionList({ sessions, timeZone, today, returnTo, quests, showQ
                           timeFormat.format(new Date(session.started_at)),
                           showQuest && session.quest_id ? (session.questTitle ?? 'Quest') : null,
                           !session.quest_id ? 'Standalone' : null,
+                          resourceTitleFor(session, resources) ? `With ${resourceTitleFor(session, resources)}` : null,
                           !session.quest_id && session.pillar ? QUEST_PILLAR_LABELS[session.pillar as QuestPillar] : null,
                         ].filter(Boolean).join(' · ')}
                       </span>
@@ -58,6 +66,7 @@ export function SessionList({ sessions, timeZone, today, returnTo, quests, showQ
                       today={today}
                       returnTo={returnTo}
                       quests={quests}
+                      resources={resources}
                       session={session}
                       submitLabel="Save session"
                     />

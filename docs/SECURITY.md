@@ -12,7 +12,9 @@
 - `lifeos_handle_new_user()` (SECURITY DEFINER) is executable only by `postgres` and `service_role`.
 - `lifeos_reject_truncate()` blocks `TRUNCATE` (including `CASCADE`) on `side_quests` and `learning_sessions`.
 - Learning-session soft delete is enforced in the database: deletion time comes from the database clock, restore is impossible after 30 days even before cleanup runs, and deleted rows cannot be edited. Superusers can still bypass triggers; never truncate these tables.
-- New M1 tables revoke Supabase's default ALL grants and grant only what the app needs.
+- New tables revoke Supabase's default ALL grants and grant only what the app needs; link tables have no UPDATE.
+- Resource URLs: only http(s) accepted (domain and database checks); LifeOS never fetches user-supplied URLs (no SSRF surface); links open with `rel="noopener noreferrer nofollow"`.
+- Resource origin is immutable (trigger); provenance of URL and title values is recorded for later provider purges.
 
 ## Verified on staging
 - 41/41 two-user RLS and integrity tests on the reconstructed schema (2026-11-25).

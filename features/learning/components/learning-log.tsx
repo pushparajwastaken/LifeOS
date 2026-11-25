@@ -40,13 +40,13 @@ export function LearningLog({ data, timeZone, notice, undoId }: LearningLogProps
 
       <section className={styles.panel} aria-labelledby="log-session-title">
         <div className={styles.sectionHeader}><div><p className={styles.kicker}>NEW SESSION</p><h2 id="log-session-title">Log a learning session</h2></div></div>
-        <SessionForm action={logSessionAction} timeZone={timeZone} today={data.week.today} returnTo="/learning" quests={data.quests} submitLabel="Log session" />
+        <SessionForm action={logSessionAction} timeZone={timeZone} today={data.week.today} returnTo="/learning" quests={data.quests} resources={data.resources} submitLabel="Log session" />
       </section>
 
       <section className={styles.panel} aria-labelledby="history-title">
         <div className={styles.sectionHeader}><div><p className={styles.kicker}>HISTORY</p><h2 id="history-title">Your sessions</h2></div></div>
         {data.sessions.length > 0 ? (
-          <SessionList sessions={data.sessions} timeZone={timeZone} today={data.week.today} returnTo="/learning" quests={data.quests} showQuest />
+          <SessionList sessions={data.sessions} timeZone={timeZone} today={data.week.today} returnTo="/learning" quests={data.quests} resources={data.resources} showQuest />
         ) : (
           <Empty className={styles.emptyState}>
             <EmptyHeader>

@@ -1,15 +1,17 @@
 import type { createClient } from '@/lib/supabase/server'
 import { addDateDays, getLocalDateKey, getWeekStart } from '@/features/habits/habit-domain'
 import { RESTORE_WINDOW_DAYS, sumMinutesBetween, type SessionType } from './learning-domain'
+import type { ResourceOption } from '@/features/resources/resource-service'
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
 
 const DAY_MS = 24 * 60 * 60 * 1000
-const SESSION_COLUMNS = 'id,quest_id,topic,pillar,session_type,started_at,duration_minutes,notes'
+const SESSION_COLUMNS = 'id,quest_id,resource_id,topic,pillar,session_type,started_at,duration_minutes,notes'
 
 export type SessionRow = {
   id: string
   quest_id: string | null
+  resource_id: string | null
   topic: string | null
   pillar: string | null
   session_type: SessionType
@@ -18,7 +20,7 @@ export type SessionRow = {
   notes: string | null
 }
 
-export type SessionView = SessionRow & { localDate: string; minutes: number; questTitle: string | null }
+export type SessionView = SessionRow & { localDate: string; minutes: number; questTitle: string | null; resourceTitle?: string | null }
 export type DeletedSession = SessionRow & { deleted_at: string; questTitle: string | null }
 export type QuestOption = { id: string; title: string; status: string }
 
@@ -53,6 +55,7 @@ export type LearningLogData = {
   sessions: SessionView[]
   deleted: DeletedSession[]
   quests: QuestOption[]
+  resources: ResourceOption[]
   week: WeekWindow & { minutes: number; sessions: number; activeDays: number }
   hasLoadError: boolean
 }
@@ -62,17 +65,23 @@ export async function getLearningLogData(supabase: Supabase, userId: string, tim
   const week = currentWeek(timeZone)
   const restoreSince = new Date(Date.now() - RESTORE_WINDOW_DAYS * DAY_MS).toISOString()
 
-  const [sessionResult, deletedResult, questResult] = await Promise.all([
+  const [sessionResult, deletedResult, questResult, resourceResult] = await Promise.all([
     supabase.from('active_learning_sessions').select(SESSION_COLUMNS).eq('user_id', userId)
       .order('started_at', { ascending: false }).limit(200),
     supabase.from('learning_sessions').select(`${SESSION_COLUMNS},deleted_at`).eq('user_id', userId)
       .not('deleted_at', 'is', null).gt('deleted_at', restoreSince).order('deleted_at', { ascending: false }).limit(50),
     supabase.from('side_quests').select('id,title,status').eq('user_id', userId).order('updated_at', { ascending: false }).limit(200),
+    supabase.from('learning_resources').select('id,title,resource_type,status').eq('user_id', userId).order('created_at', { ascending: false }).limit(300),
   ])
 
+  const allResources = (resourceResult.data ?? []) as ResourceOption[]
+  const resourceTitles = new Map(allResources.map((r) => [r.id, r.title]))
   const quests = (questResult.data ?? []) as QuestOption[]
   const titles = new Map(quests.map((quest) => [quest.id, quest.title]))
-  const sessions = ((sessionResult.data ?? []) as SessionRow[]).map((row) => toView(row, timeZone, titles))
+  const sessions = ((sessionResult.data ?? []) as SessionRow[]).map((row) => ({
+    ...toView(row, timeZone, titles),
+    resourceTitle: row.resource_id ? resourceTitles.get(row.resource_id) ?? null : null,
+  }))
   const deleted = ((deletedResult.data ?? []) as Array<SessionRow & { deleted_at: string }>).map((row) => ({
     ...row,
     questTitle: row.quest_id ? titles.get(row.quest_id) ?? null : null,
@@ -83,13 +92,14 @@ export async function getLearningLogData(supabase: Supabase, userId: string, tim
     sessions,
     deleted,
     quests: [...quests].sort((a, b) => Number(b.status === 'active') - Number(a.status === 'active')),
+    resources: allResources.filter((r) => r.status !== 'archived'),
     week: {
       ...week,
       minutes: sumMinutesBetween(thisWeek, week.weekStart, week.weekEnd),
       sessions: thisWeek.length,
       activeDays: new Set(thisWeek.map((s) => s.localDate)).size,
     },
-    hasLoadError: Boolean(sessionResult.error || deletedResult.error || questResult.error),
+    hasLoadError: Boolean(sessionResult.error || deletedResult.error || questResult.error || resourceResult.error),
   }
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getOwnedQuest } from '@/features/quests/quest-service'
+import { getOwnedResource } from '@/features/resources/resource-service'
 import { getPageSession } from '@/lib/page-session'
 import { sessionInputSchema, sessionInputToRow } from './learning-domain'
 import { getOwnedSession } from './learning-service'
@@ -16,8 +17,8 @@ function formString(formData: FormData, name: string): string {
 
 /** Only the learning log or a quest page may be a redirect target (no open redirects). */
 function safeReturnPath(value: string): string {
-  const match = /^\/quests\/([0-9a-f-]{36})$/i.exec(value)
-  return match && UUID.test(match[1]) ? value : '/learning'
+  const match = /^\/(quests|library)\/([0-9a-f-]{36})$/i.exec(value)
+  return match && UUID.test(match[2]) ? value : '/learning'
 }
 
 function redirectWithNotice(path: string, notice: string, extra?: Record<string, string>): never {
@@ -31,6 +32,7 @@ function redirectWithNotice(path: string, notice: string, extra?: Record<string,
 function readSessionInput(formData: FormData) {
   return sessionInputSchema.safeParse({
     questId: formString(formData, 'questId'),
+    resourceId: formString(formData, 'resourceId'),
     topic: formString(formData, 'topic'),
     pillar: formString(formData, 'pillar'),
     sessionType: formString(formData, 'sessionType'),
@@ -47,6 +49,7 @@ export async function logSessionAction(formData: FormData): Promise<void> {
   if (!parsed.success) redirectWithNotice(returnTo, parsed.error.issues.some((i) => i.path[0] === 'topic') ? 'session-needs-topic' : 'input-invalid')
   const { supabase, userId, timeZone } = await getPageSession()
   if (parsed.data.questId && !(await getOwnedQuest(supabase, userId, parsed.data.questId))) redirectWithNotice(returnTo, 'record-not-found')
+  if (parsed.data.resourceId && !(await getOwnedResource(supabase, userId, parsed.data.resourceId))) redirectWithNotice(returnTo, 'record-not-found')
   const { error } = await supabase.from('learning_sessions').insert({ user_id: userId, ...sessionInputToRow(parsed.data, timeZone) })
   redirectWithNotice(returnTo, error ? 'save-failed' : 'session-logged')
 }
@@ -67,6 +70,7 @@ export async function updateSessionAction(formData: FormData): Promise<void> {
   const parsed = readSessionInput(formData)
   if (!parsed.success) redirectWithNotice(returnTo, parsed.error.issues.some((i) => i.path[0] === 'topic') ? 'session-needs-topic' : 'input-invalid')
   if (parsed.data.questId && !(await getOwnedQuest(supabase, userId, parsed.data.questId))) redirectWithNotice(returnTo, 'record-not-found')
+  if (parsed.data.resourceId && !(await getOwnedResource(supabase, userId, parsed.data.resourceId))) redirectWithNotice(returnTo, 'record-not-found')
   const { data, error } = await supabase.from('learning_sessions').update(sessionInputToRow(parsed.data, timeZone))
     .eq('id', session.id).eq('user_id', userId).is('deleted_at', null).select('id').maybeSingle()
   redirectWithNotice(returnTo, error || !data ? 'save-failed' : 'session-updated')

@@ -9,6 +9,7 @@ Source of truth: `supabase/migrations/`. Applied in this order (text order of ve
 | 20261126090000 | `20261126090000_revoke_handle_new_user_execute.sql` | Revokes EXECUTE on the SECURITY DEFINER auth trigger function from public/anon/authenticated (matches production) |
 | 20261126100000 | `20261126100000_side_quests_core.sql` | Side Quests (below) and the TRUNCATE guard |
 | 20261126110000 | `20261126110000_learning_sessions.sql` | Learning sessions, `active_learning_sessions` view, soft-delete guard, quest-delete topic trigger |
+| 20261126120000 | `20261126120000_resource_library.sql` | Resource Library tables, `learning_sessions.resource_id`, guard and view updated for it |
 
 ## Ownership pattern (every user-owned table)
 - `user_id uuid not null references auth.users on delete cascade`
@@ -30,7 +31,7 @@ Grants: `anon` none; `authenticated` select/insert/update/delete (select/insert/
 ## Learning sessions (M2)
 | Object | Details |
 |---|---|
-| `learning_sessions` | quest_id (optional; FK `(quest_id, user_id)` → side_quests **on delete set null (quest_id)**), topic (≤160; required when there is no quest), pillar (standalone only), session_type (study/practice/build/watch/read/other), started_at, duration_minutes (1–1440), notes (≤4000), deleted_at. `resource_id` is added in M3 with `learning_resources`. |
+| `learning_sessions` | quest_id (optional; FK `(quest_id, user_id)` → side_quests **on delete set null (quest_id)**), topic (≤160; required when there is no quest), pillar (standalone only), session_type (study/practice/build/watch/read/other), started_at, duration_minutes (1–1440), notes (≤4000), deleted_at. resource_id (optional; FK `(resource_id, user_id)` → learning_resources **on delete set null (resource_id)**, added in M3). |
 | `lifeos_session_guard` (BEFORE INSERT OR UPDATE) | Inserts start active; soft delete stamps `deleted_at = now()`; restore only within 30 days by the database clock and only without other edits; deleted rows cannot be edited except the system changes (quest_id → null, empty topic filled). |
 | `lifeos_preserve_session_topics` (BEFORE DELETE on side_quests) | Copies the quest title into empty session topics so deleting a quest never invalidates or destroys sessions. Runs with the caller's privileges. |
 | `active_learning_sessions` view | `security_invoker = true`; all normal reads and analytics use it. Only "Recently deleted" reads the table directly. |
@@ -38,10 +39,20 @@ Grants: `anon` none; `authenticated` select/insert/update/delete (select/insert/
 
 Physical cleanup of expired soft-deleted rows happens lazily under the user's session when the learning log loads (31-day cutoff, conservative); logical expiry is enforced by the trigger.
 
+## Resource Library (M3)
+| Table | Key columns | Notes |
+|---|---|---|
+| `learning_resources` | url (http(s) only), canonical_url (https, **unique per user**), url_source and title_source (user/youtube/chrome/x), title (1–500), resource_type (article, documentation, video, playlist, book, paper, course, post, repository, other), origin (manual/chrome_html/chrome_extension/youtube/x; **immutable**, enforced by `lifeos_origin_guard`), category, status (saved/in_progress/completed/archived), completed_at (set ⇔ completed), notes, generated `search_document` | TRUNCATE rejected (and cascading into sessions is blocked by the sessions guard) |
+| `resource_source_records` | resource_id, provider, external_id (**unique per user + provider**), source_url, source_title, provider_metadata (jsonb object), metadata_refreshed_at, sync_state, first_seen_at, last_seen_at | Provider data kept apart from the core record; cascades with its resource. Written by imports from M4. |
+| `quest_resources` | quest_id, resource_id, position, added_at; PK (quest_id, resource_id) | Both FKs include user_id; no UPDATE grant |
+
+Canonical URLs (`canonicalizeUrl` in `features/resources/resource-domain.ts`): http(s) only; lowercase host without `www.`/trailing dot; default ports dropped; `https` in the key; fragment, `utm_*` and common click-id parameters removed; remaining parameters sorted; trailing slash removed; YouTube videos → `https://youtube.com/watch?v=ID`, playlists → `https://youtube.com/playlist?list=ID`; X/Twitter posts → `https://x.com/i/status/ID`. The original URL is kept for display.
+
 ## Legacy tables kept unchanged
 `rabbit_holes`, `rabbit_hole_resources`, `rabbit_hole_experiments`, `study_sessions` are preserved and unused by the app. `knowledge_notes` is reused by the Notes page.
 
 ## Rollback notes
+- 20261126120000: drop `quest_resources`, `resource_source_records`, the `learning_sessions.resource_id` column (after recreating the M2 view and guard), and `learning_resources`.
 - 20261126110000: drop `active_learning_sessions`, the `lifeos_preserve_session_topics` trigger on side_quests, `learning_sessions`, and both functions.
 - 20261126100000: no automatic down migration. If never used, drop `quest_notes`, `quest_milestones`, `quest_objectives`, `side_quests` and `lifeos_reject_truncate()`; no legacy object depends on them.
 - 20261126090000: `grant execute on function public.lifeos_handle_new_user() to public, anon, authenticated;` restores the previous state (not recommended).

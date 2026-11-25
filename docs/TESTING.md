@@ -12,10 +12,12 @@ node --test tests/*.test.mjs
 | `note-domain.test.mjs` | Note types vs SQL check, http(s)-only links, validation, search normalisation |
 | `learning-domain.test.mjs` | Session constants vs SQL, topic rule, 1–1440 minutes, timezone and DST conversion, week totals, target attainment, restore window |
 | `learning-sessions-migration.test.mjs` | Static allowlist for M2; only change to an existing table is the quest-delete trigger; soft-delete rules present |
+| `resource-domain.test.mjs` | URL canonicalization (unsafe schemes, host/query/port normalisation, tracking params, YouTube and X variants), type detection, validation, filters |
+| `resource-library-migration.test.mjs` | Static allowlist for M3 including the permitted changes to M2 objects; constants vs SQL; dedup and FK rules |
 | `side-quests-migration.test.mjs` | Static allowlist: every statement in the M1 migration matches an approved shape; legacy tables untouched; RLS, policies, grants, triggers present; every FK includes `user_id` |
 
 ## Staging integration tests (real Supabase Auth sessions)
-`tests/integration/side-quests-rls.test.mjs` and `tests/integration/learning-sessions-rls.test.mjs` are skipped unless these variables are set (never commit them):
+`tests/integration/side-quests-rls.test.mjs`, `learning-sessions-rls.test.mjs` and `resource-library-rls.test.mjs` are skipped unless these variables are set (never commit them):
 `LIFEOS_TEST_SUPABASE_URL`, `LIFEOS_TEST_SUPABASE_ANON_KEY`, `LIFEOS_PRODUCTION_PROJECT_REF` (only used to refuse production),
 `LIFEOS_TEST_USER_A_EMAIL`, `LIFEOS_TEST_USER_A_PASSWORD`, `LIFEOS_TEST_USER_B_EMAIL`, `LIFEOS_TEST_USER_B_PASSWORD`.
 
@@ -49,6 +51,9 @@ delete from auth.users where email like 'qa-rls-%@lifeos-staging.test';
 
 ## Database checks run as postgres on staging (M2)
 Run in one transaction that ends with a deliberate exception (nothing persists): inserts start active; standalone without topic, blank topic, 0 and 1441 minutes rejected; soft delete stamps now(); view hides deleted rows; editing a deleted row, changing deleted_at, and restoring with edits are rejected; restore within 30 days works and after 30 days fails; deleting a quest keeps its sessions with the topic preserved; TRUNCATE rejected.
+
+## Database checks run as postgres on staging (M3)
+Rolled back: duplicate canonical URL per user rejected (other users allowed); javascript: URL rejected; origin change rejected; completed without timestamp rejected; cross-user link rejected; view exposes resource_id; TRUNCATE rejected; deleting a quest keeps resources; deleting a resource keeps sessions (including a soft-deleted one, which stays deleted) and removes source records.
 
 ## Browser QA (staging)
 Run the dev server with a temporary, gitignored `.env.local` pointing at staging, sign in as a disposable user, and exercise the workflow. Remove `.env.local` afterwards.

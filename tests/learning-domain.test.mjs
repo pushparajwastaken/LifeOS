@@ -20,7 +20,7 @@ import {
 
 const sql = readFileSync(new URL('../supabase/migrations/20261126110000_learning_sessions.sql', import.meta.url), 'utf8')
 const QUEST = '11111111-2222-4333-8444-555555555555'
-const base = { questId: '', topic: 'Cryptography basics', pillar: 'intellectual', sessionType: 'read', date: '2026-11-26', time: '09:30', durationMinutes: '45', notes: '' }
+const base = { questId: '', resourceId: '', topic: 'Cryptography basics', pillar: 'intellectual', sessionType: 'read', date: '2026-11-26', time: '09:30', durationMinutes: '45', notes: '' }
 
 test('constants mirror the migration', () => {
   const types = sql.match(/session_type in \(([^)]*)\)/)[1].split(',').map((v) => v.trim().replace(/'/g, ''))
@@ -47,7 +47,7 @@ test('duration must be a whole number from 1 to 1440 minutes', () => {
 })
 
 test('rejects invalid type, pillar, date, time and quest id', () => {
-  for (const bad of [{ sessionType: 'nap' }, { pillar: 'spiritual' }, { date: '2026-02-30' }, { time: '24:00' }, { time: '9:30' }, { questId: 'not-a-uuid' }, { topic: 'x'.repeat(161) }]) {
+  for (const bad of [{ sessionType: 'nap' }, { pillar: 'spiritual' }, { date: '2026-02-30' }, { time: '24:00' }, { time: '9:30' }, { questId: 'not-a-uuid' }, { resourceId: 'nope' }, { topic: 'x'.repeat(161) }]) {
     assert.equal(sessionInputSchema.safeParse({ ...base, ...bad }).success, false, JSON.stringify(bad))
   }
 })
@@ -67,7 +67,7 @@ test('local time converts to UTC in the user timezone, including DST', () => {
 test('row mapping keeps pillar only for standalone sessions', () => {
   const standalone = sessionInputToRow(sessionInputSchema.parse(base), 'Asia/Kolkata')
   assert.deepEqual(standalone, {
-    quest_id: null, topic: 'Cryptography basics', pillar: 'intellectual', session_type: 'read',
+    quest_id: null, resource_id: null, topic: 'Cryptography basics', pillar: 'intellectual', session_type: 'read',
     started_at: '2026-11-26T04:00:00.000Z', duration_minutes: 45, notes: null,
   })
   const linked = sessionInputToRow(sessionInputSchema.parse({ ...base, questId: QUEST }), 'UTC')

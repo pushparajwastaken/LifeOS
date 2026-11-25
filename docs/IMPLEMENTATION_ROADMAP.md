@@ -6,9 +6,9 @@ Each milestone lands as its own reviewable branch with migrations tested on stag
 |---|---|---|---|
 | M0 | Task status fix; staging rebuilt from repo migrations; parity audit; auth-trigger EXECUTE revoke | Done | – |
 | M1 | Side Quests (quests, objectives, milestones, notes links) and minimal Notes page at `/knowledge` | Done (commit `1524b05`) | – |
-| M2 | Learning sessions: optional quest/resource, required topic when standalone, 1–1440 minutes, soft delete with strict 30-day restore, `active_learning_sessions` view, quest-delete topic trigger, TRUNCATE guard | Done on branch `feature/m2-learning-sessions` | M1 |
-| M3 | Resource Library: canonical URLs, immutable origin, url/title provenance, source records, quest attachments, search; adds `learning_sessions.resource_id` | Next | M2 |
-| M4 | Chrome bookmarks HTML import: server-side staging, preview, selection, dedup, import history | Planned | M3 |
+| M2 | Learning sessions: optional quest/resource, required topic when standalone, 1–1440 minutes, soft delete with strict 30-day restore, `active_learning_sessions` view, quest-delete topic trigger, TRUNCATE guard | Done (commit `934b170`) | M1 |
+| M3 | Resource Library: canonical URLs, immutable origin, url/title provenance, source records, quest attachments, search; adds `learning_sessions.resource_id` | Done on branch `feature/m3-resource-library` | M2 |
+| M4 | Chrome bookmarks HTML import: server-side staging, preview, selection, dedup, import history | Next | M3 |
 | M5 | Life Analytics: metric kinds (`event_exact`, `event_approximate`, `current_state`), five metric groups, Right now / Over time zones; dashboard integration | Planned | M2–M4 |
 | M6 | YouTube integration with 30-day refresh/purge and `pg_cron` | Blocked externally | Custom domain, Google verification, privacy/terms pages, Vercel Connect revocation check |
 | M7 | Chrome extension (optional bookmarks permission, page-to-extension messaging) | Planned | M4 |

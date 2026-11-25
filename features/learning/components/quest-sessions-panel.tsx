@@ -4,6 +4,7 @@ import { restoreSessionAction } from '@/features/learning/learning-actions'
 import styles from '@/features/quests/quests.module.css'
 import { logSessionAction } from '../learning-actions'
 import { formatDuration, weeklyTargetAttainment } from '../learning-domain'
+import type { ResourceOption } from '@/features/resources/resource-service'
 import type { QuestSessionSummary } from '../learning-service'
 import { SessionForm } from './session-form'
 import { SessionList, UndoDeleteForm } from './session-list'
@@ -12,10 +13,11 @@ type QuestSessionsPanelProps = {
   quest: { id: string; title: string; status: string; weekly_target_minutes: number | null }
   summary: QuestSessionSummary
   timeZone: string
+  resources: ResourceOption[]
   undoId?: string
 }
 
-export function QuestSessionsPanel({ quest, summary, timeZone, undoId }: QuestSessionsPanelProps) {
+export function QuestSessionsPanel({ quest, summary, timeZone, resources, undoId }: QuestSessionsPanelProps) {
   const returnTo = `/quests/${quest.id}`
   const target = weeklyTargetAttainment(summary.minutesThisWeek, quest.weekly_target_minutes)
   return (
@@ -45,13 +47,14 @@ export function QuestSessionsPanel({ quest, summary, timeZone, undoId }: QuestSe
           today={summary.week.today}
           returnTo={returnTo}
           quests={[{ id: quest.id, title: quest.title, status: quest.status }]}
+          resources={resources}
           showQuest={false}
         />
       ) : null}
 
       <details className={styles.createDetails}>
         <summary>Log a session for this quest</summary>
-        <SessionForm action={logSessionAction} timeZone={timeZone} today={summary.week.today} returnTo={returnTo} fixedQuestId={quest.id} submitLabel="Log session" />
+        <SessionForm action={logSessionAction} timeZone={timeZone} today={summary.week.today} returnTo={returnTo} fixedQuestId={quest.id} resources={resources} submitLabel="Log session" />
       </details>
     </section>
   )

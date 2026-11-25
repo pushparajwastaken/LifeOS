@@ -37,6 +37,7 @@ const blankToNull = (value: unknown) => (typeof value === 'string' && value.trim
 export const sessionInputSchema = z
   .object({
     questId: z.preprocess(blankToNull, z.string().regex(UUID).nullable()),
+    resourceId: z.preprocess(blankToNull, z.string().regex(UUID).nullable()),
     topic: z.preprocess(blankToNull, z.string().trim().max(SESSION_LIMITS.topic).nullable()),
     pillar: z.preprocess(blankToNull, z.enum(SESSION_PILLARS).nullable()),
     sessionType: z.enum(SESSION_TYPES),
@@ -98,6 +99,7 @@ export function utcToZonedParts(iso: string, timeZone: string): { date: string; 
 export function sessionInputToRow(input: SessionInput, timeZone: string) {
   return {
     quest_id: input.questId,
+    resource_id: input.resourceId,
     topic: input.topic,
     pillar: input.questId ? null : input.pillar,
     session_type: input.sessionType,
