@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Activity,
+  BookMarked,
   BookOpen,
   CalendarDays,
   Compass,
@@ -14,6 +15,7 @@ import {
   Leaf,
   Library,
   LogOut,
+  Map as MapIcon,
   MessageCircle,
   Moon,
   Sparkles,
@@ -45,11 +47,20 @@ const pillarLinks = [
 
 const growthLinks = [
   { label: 'Goals', href: '/goals', icon: Goal },
+  { label: 'Side Quests', href: '/quests', icon: MapIcon },
+  { label: 'Library', href: '/library', icon: BookMarked },
   { label: 'Knowledge vault', href: '/knowledge', icon: Library },
   { label: 'Analytics', href: '/analytics', icon: Activity },
 ]
 
 const settingsLink = { label: 'Settings', href: '/settings', icon: Settings2 }
+
+// The mobile bar is chosen by address, not position, so adding sidebar links never changes it.
+const MOBILE_HREFS = ['/', '/habits', '/physical', '/goals', '/analytics']
+const mobileLinks = [
+  ...MOBILE_HREFS.map(href => [...primaryLinks, ...pillarLinks, ...growthLinks].find(link => link.href === href)).filter(link => link !== undefined),
+  settingsLink,
+]
 
 function breadcrumbLabel(pathname: string) {
   if (pathname === '/') return 'Overview'
@@ -106,7 +117,7 @@ export function AppShell({ children, userName = 'Your space', userEmail = '' }: 
         </header>
         <main id="main-content" className="main-content">{children}</main>
         <nav className="mobile-nav" aria-label="Mobile navigation">
-          {[...primaryLinks.slice(0, 2), ...pillarLinks.slice(0, 1), ...growthLinks.slice(0, 1), ...growthLinks.slice(2), settingsLink].map(({ label, href, icon: Icon }) => {
+          {mobileLinks.map(({ label, href, icon: Icon }) => {
             const active = linkIsActive(pathname, href)
             return <Link key={href} className={`mobile-nav-item${active ? ' mobile-nav-active' : ''}`} href={href} aria-label={label} aria-current={active ? 'page' : undefined}><Icon size={19} aria-hidden="true" /><span>{label === 'Overview' ? 'Home' : label}</span></Link>
           })}
