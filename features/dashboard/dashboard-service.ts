@@ -1,4 +1,5 @@
 import type { createClient } from '@/lib/supabase/server'
+import { OPEN_TASK_STATUSES, filterOpenTasks } from '@/features/tasks/task-status'
 import { getLocalDateKey, isHabitScheduledOnDate, normalizeHabitSchedule, normalizeTimeZone, type HabitCadence, type HabitSchedule, type HabitTrackingType } from '@/features/habits/habit-domain'
 
 export { getLocalDateKey, normalizeTimeZone } from '@/features/habits/habit-domain'
@@ -107,12 +108,6 @@ export function formatPillarLabel(value: string | null | undefined): string {
   return normalized.replace(/\b\w/g, (character) => character.toUpperCase())
 }
 
-function isClosedTask(status: string): boolean {
-  return ['completed', 'complete', 'done', 'archived', 'cancelled', 'canceled'].includes(
-    status.trim().toLowerCase(),
-  )
-}
-
 function taskSortValue(task: TaskRow): number {
   if (!task.due_at) return Number.POSITIVE_INFINITY
   const timestamp = Date.parse(task.due_at)
@@ -145,7 +140,7 @@ export async function getDashboardData(
       .from('tasks')
       .select('id,title,status,priority,pillar,due_at,estimated_minutes,created_at')
       .eq('user_id', userId)
-      .neq('status', 'completed')
+      .in('status', [...OPEN_TASK_STATUSES])
       .order('due_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(30),
@@ -166,8 +161,7 @@ export async function getDashboardData(
   ])
 
   const taskRows = (taskResult.data ?? []) as TaskRow[]
-  const tasks = taskRows
-    .filter((task) => !isClosedTask(task.status))
+  const tasks = filterOpenTasks(taskRows)
     .sort((a, b) => {
       const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
       const priorityDifference =

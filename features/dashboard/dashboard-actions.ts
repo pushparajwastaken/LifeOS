@@ -4,6 +4,12 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import {
+  COMPLETED_TASK_STATUS,
+  DEFAULT_TASK_STATUS,
+  OPEN_TASK_STATUSES,
+  getTaskStatusUpdate,
+} from '@/features/tasks/task-status'
 import { DASHBOARD_PILLAR_IDS, getDurationUnit, getLocalDateKey, normalizeTimeZone } from './dashboard-service'
 
 const taskSchema = z.object({
@@ -53,7 +59,7 @@ export async function createTaskAction(formData: FormData): Promise<void> {
   const { error } = await supabase.from('tasks').insert({
     user_id: user.id,
     title: parsed.data.title,
-    status: 'todo',
+    status: DEFAULT_TASK_STATUS,
     priority: parsed.data.priority,
   })
 
@@ -65,12 +71,13 @@ export async function completeTaskAction(formData: FormData): Promise<void> {
   if (!parsedTaskId.success) redirectWithNotice('record-not-found')
 
   const { supabase, user } = await getSignedInUser()
-  const now = new Date().toISOString()
+  // Only open tasks can be completed, so a repeated submit never overwrites the original completed_at.
   const { data, error } = await supabase
     .from('tasks')
-    .update({ status: 'completed', completed_at: now, updated_at: now })
+    .update(getTaskStatusUpdate(COMPLETED_TASK_STATUS, new Date()))
     .eq('id', parsedTaskId.data)
     .eq('user_id', user.id)
+    .in('status', [...OPEN_TASK_STATUSES])
     .select('id')
     .maybeSingle()
 
