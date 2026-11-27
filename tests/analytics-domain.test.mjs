@@ -119,3 +119,27 @@ test('the domain module stays importable without the app bundler', () => {
   assert.doesNotMatch(source, /from '@\//)
   assert.doesNotMatch(source, /from '\.\.?\/[^']*(?<!\.ts)'/)
 })
+
+test('compareLastWeek compares the last full week with the four weeks before it', async () => {
+  const { compareLastWeek } = await import('../features/analytics/analytics-domain.ts')
+  // 12 weeks; index 10 is last full week, 11 is the current partial week (ignored).
+  const counts = [0, 0, 0, 0, 0, 2, 4, 2, 4, 2, 8, 1]
+  assert.deepEqual(compareLastWeek(counts, 'count'), { lastWeek: 8, usual: 3, direction: 'higher' })
+  assert.deepEqual(compareLastWeek([0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0], 'count'), { lastWeek: 3, usual: 3, direction: 'similar' })
+  assert.deepEqual(compareLastWeek([0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 0, 9], 'count'), { lastWeek: 0, usual: 30, direction: 'lower' })
+  // Started using the feature too recently: weeks before the first activity are not zero effort.
+  assert.equal(compareLastWeek([0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 0], 'count'), null)
+  assert.equal(compareLastWeek(Array(12).fill(0), 'count'), null)
+  // Usual level keeps one decimal for counts.
+  assert.equal(compareLastWeek([1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0], 'count').usual, 0.3)
+})
+
+test('compareLastWeek treats rates with blanks conservatively', async () => {
+  const { compareLastWeek } = await import('../features/analytics/analytics-domain.ts')
+  const nulls = Array(6).fill(null)
+  assert.deepEqual(compareLastWeek([...nulls, 80, 70, null, 90, 60, null], 'rate'), { lastWeek: 60, usual: 80, direction: 'lower' })
+  assert.deepEqual(compareLastWeek([...nulls, 80, 70, 76, 90, 82, null], 'rate'), { lastWeek: 82, usual: 79, direction: 'similar' })
+  assert.equal(compareLastWeek([...nulls, 80, null, null, 90, 60, null], 'rate'), null) // only 2 baseline weeks measured
+  assert.equal(compareLastWeek([...nulls, 80, 70, 75, 90, null, 50], 'rate'), null) // last week not measured
+  assert.equal(compareLastWeek([50, 60, 70], 'rate'), null) // too short
+})

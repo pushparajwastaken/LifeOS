@@ -13,7 +13,7 @@ Each milestone lands as its own reviewable branch with migrations tested on stag
 | M6 | YouTube integration with 30-day refresh/purge and `pg_cron` | Blocked externally | Custom domain, Google verification, privacy/terms pages, Vercel Connect revocation check |
 | M7 | Chrome extension (optional bookmarks permission, page-to-extension messaging) | Done on branch `feature/m7-chrome-extension` (manual check in real Chrome still to do) | M4 |
 | M8 | X integration feasibility | Done: review in `docs/X_FEASIBILITY.md`; recommendation is links only, no API sync for now | Paid API, OAuth path |
-| M9 | Advanced analytics and product polish | Next | M5 |
+| M9 | Advanced analytics and product polish | In progress on `feature/m9-advanced-analytics`: last-week-vs-usual comparisons, parallel analytics loading, Home weekly summary done; module polish (Tasks, Habits, Goals, Calendar, Planner, Physical, Settings) still to do | M5 |
 
 ## Existing modules still to complete (in parallel)
 - **Tasks**: task page with edit, delete, reopen, due dates, filters, search.

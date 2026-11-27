@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-11-27 (M8 X feasibility review). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
+Last updated: 2026-11-27 (M9 analytics comparisons and Home summary). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
 "Verified" means exercised against the staging Supabase project (`vexgemyvefxhizavhpqc`), not production.
 
 ## Platform and infrastructure
@@ -18,7 +18,7 @@ Last updated: 2026-11-27 (M8 X feasibility review). Status values: **Complete**,
 
 | Module | Feature | Status | Files | Migration | Tests | Remaining blockers |
 |---|---|---|---|---|---|---|
-| Home dashboard | Today overview, tasks, habits, goals list | Partial | `app/page.tsx`, `features/dashboard/*` | core | `tests/task-status.test.mjs` | Learning, calendar, physical and weekly summaries not yet on the dashboard (M5/M9) |
+| Home dashboard | Today overview, tasks, habits, goals list; "This week so far" (tasks completed, learning time, days with learning vs last week) linking to analytics | Partial | `app/page.tsx`, `features/dashboard/*` | core | `tests/task-status.test.mjs`; staging browser QA (two users, 375px) | Calendar and physical summaries not yet on the dashboard |
 | Tasks | Create, complete (writes `done`), open-task filtering | Partial | `features/dashboard/dashboard-actions.ts`, `features/tasks/task-status.ts` | core | `tests/task-status.test.mjs`, staging RLS tests | No task page: edit, delete, reopen, due dates in UI, search, filters missing |
 | Habits | Create/edit/archive, check-ins, partial, rest, streaks, analytics | Complete | `features/habits/*`, `app/habits/*` | core | `tests/habit-domain.test.mjs` | – |
 | Goals | Read-only list on dashboard | Backend only | `features/dashboard/dashboard-service.ts` | core (goals, goal_milestones, goal_progress_entries) | staging FK tests | No goals UI (create, milestones, progress entries) |

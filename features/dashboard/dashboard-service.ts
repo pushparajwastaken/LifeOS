@@ -1,5 +1,6 @@
 import type { createClient } from '@/lib/supabase/server'
 import { OPEN_TASK_STATUSES, filterOpenTasks } from '@/features/tasks/task-status'
+import { addDays, countByWeek, distinctDaysByWeek, localDateKey, sumByWeek, weekStartOf } from '@/features/analytics/analytics-domain'
 import { getLocalDateKey, isHabitScheduledOnDate, normalizeHabitSchedule, normalizeTimeZone, type HabitCadence, type HabitSchedule, type HabitTrackingType } from '@/features/habits/habit-domain'
 
 export { getLocalDateKey, normalizeTimeZone } from '@/features/habits/habit-domain'
@@ -64,6 +65,15 @@ export type DashboardGoal = {
   unit: string | null
 }
 
+/** This week so far (Monday to today) next to the whole of last week. Facts only; no score. */
+export type WeekPair = { thisWeek: number; lastWeek: number }
+export type DashboardWeek = {
+  tasksCompleted: WeekPair
+  learningMinutes: WeekPair
+  learningDays: WeekPair
+  truncated: boolean
+}
+
 export type DashboardData = {
   profileName: string | null
   timeZone: string
@@ -74,6 +84,7 @@ export type DashboardData = {
   todayHabits: DashboardHabit[]
   habitLogs: DashboardHabitLog[]
   goals: DashboardGoal[]
+  week: DashboardWeek
   hasLoadError: boolean
 }
 
@@ -135,7 +146,12 @@ export async function getDashboardData(
     day: 'numeric',
   }).format(now)
 
-  const [taskResult, habitResult, goalResult] = await Promise.all([
+  const thisWeekStart = weekStartOf(today)
+  const weeks = [addDays(thisWeekStart, -7), thisWeekStart]
+  const since = `${addDays(weeks[0], -1)}T00:00:00Z`
+  const WEEK_ROW_CAP = 2000
+
+  const [taskResult, habitResult, goalResult, doneResult, sessionResult] = await Promise.all([
     supabase
       .from('tasks')
       .select('id,title,status,priority,pillar,due_at,estimated_minutes,created_at')
@@ -158,7 +174,31 @@ export async function getDashboardData(
       .eq('status', 'active')
       .order('ends_on', { ascending: true })
       .limit(8),
+    supabase
+      .from('tasks')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .eq('status', 'done')
+      .gte('completed_at', since)
+      .limit(WEEK_ROW_CAP),
+    supabase
+      .from('active_learning_sessions')
+      .select('started_at,duration_minutes')
+      .eq('user_id', userId)
+      .gte('started_at', since)
+      .limit(WEEK_ROW_CAP),
   ])
+
+  const local = (iso: string) => localDateKey(iso, timeZone)
+  const doneDates = ((doneResult.data ?? []) as Array<{ completed_at: string | null }>).flatMap((row) => (row.completed_at ? [local(row.completed_at)] : []))
+  const sessionRows = ((sessionResult.data ?? []) as Array<{ started_at: string; duration_minutes: number }>).map((row) => ({ date: local(row.started_at), value: row.duration_minutes }))
+  const pair = ([lastWeek, thisWeek]: number[]): WeekPair => ({ thisWeek, lastWeek })
+  const week: DashboardWeek = {
+    tasksCompleted: pair(countByWeek(doneDates, weeks, today)),
+    learningMinutes: pair(sumByWeek(sessionRows, weeks, today)),
+    learningDays: pair(distinctDaysByWeek(sessionRows.map((row) => row.date), weeks, today)),
+    truncated: (doneResult.data ?? []).length >= WEEK_ROW_CAP || (sessionResult.data ?? []).length >= WEEK_ROW_CAP,
+  }
 
   const taskRows = (taskResult.data ?? []) as TaskRow[]
   const tasks = filterOpenTasks(taskRows)
@@ -230,8 +270,9 @@ export async function getDashboardData(
     todayHabits,
     habitLogs,
     goals,
+    week,
     hasLoadError: Boolean(
-      profileError || taskResult.error || habitResult.error || goalResult.error || habitLogError,
+      profileError || taskResult.error || habitResult.error || goalResult.error || habitLogError || doneResult.error || sessionResult.error,
     ),
   }
 }

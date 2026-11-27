@@ -5,7 +5,9 @@ import { SESSION_TYPE_LABELS, type SessionType } from '@/features/learning/learn
 import { getQuestProgress } from '@/features/quests/quest-domain'
 import {
   addDays,
+  COMPARABLE_METRICS,
   breakdown,
+  compareLastWeek,
   countByWeek,
   distinctDaysByWeek,
   isCompletedOnTime,
@@ -16,6 +18,7 @@ import {
   sumByWeek,
   weekWindow,
   type MetricGroup,
+  type WeekComparison,
   type MetricId,
   type WeeklySeries,
 } from './analytics-domain'
@@ -23,7 +26,7 @@ import {
 type Supabase = Awaited<ReturnType<typeof createClient>>
 
 /** An event metric: one value per window week (null = nothing to measure) plus a window summary. */
-export type EventMetric = { id: MetricId; series: WeeklySeries; summary: number | null }
+export type EventMetric = { id: MetricId; series: WeeklySeries; summary: number | null; comparison: WeekComparison | null }
 /** A current_state metric: a single "as of today" value; never trended or compared. */
 export type StateMetric = { id: MetricId; value: number | null; detail?: string }
 export type BreakdownRow = { key: string; value: number }
@@ -55,18 +58,21 @@ type ResourceRow = { created_at: string; origin: string; status: string; complet
 
 const ORIGIN_LABELS: Record<string, string> = { manual: 'Added by hand', chrome_html: 'Bookmark import', chrome_extension: 'Chrome extension', youtube: 'YouTube', x: 'X' }
 
-const event = (id: MetricId, series: WeeklySeries, summary?: number | null): EventMetric =>
-  ({ id, series, summary: summary === undefined ? seriesTotal(series as number[]) : summary })
+const event = (id: MetricId, series: WeeklySeries, summary?: number | null): EventMetric => {
+  const kind = COMPARABLE_METRICS[id]
+  return { id, series, summary: summary === undefined ? seriesTotal(series as number[]) : summary, comparison: kind ? compareLastWeek(series, kind) : null }
+}
 
 export async function getAnalyticsData(supabase: Supabase, userId: string): Promise<AnalyticsData> {
-  const habitsData = await getHabitManagementData(supabase, userId)
-  const { today, timeZone } = habitsData
-  const weeks = weekWindow(today)
-  // One day of slack before the window so timezone offsets never drop a boundary event; the domain filters exactly.
-  const since = `${addDays(weeks[0], -1)}T00:00:00Z`
-  const nowIso = new Date().toISOString()
+  const now = new Date()
+  const nowIso = now.toISOString()
+  // Computed before the profile timezone is known so every query can run in parallel with the habits load:
+  // the window of (UTC today - 1 day) starts no later than the local window, and one more day of slack covers
+  // the timezone offset at the boundary. The domain then buckets events exactly by local date.
+  const since = `${addDays(weekWindow(addDays(nowIso.slice(0, 10), -1))[0], -1)}T00:00:00Z`
 
-  const [tasksDone, tasksOverdue, goalsCompleted, goalMilestones, goalProgress, sessions, quests, objectives, questMilestones, resourcesAdded, resourcesCompleted, backlog, attached, imports] = await Promise.all([
+  const [habitsData, tasksDone, tasksOverdue, goalsCompleted, goalMilestones, goalProgress, sessions, quests, objectives, questMilestones, resourcesAdded, resourcesCompleted, backlog, attached, imports] = await Promise.all([
+    getHabitManagementData(supabase, userId),
     supabase.from('tasks').select('status,due_at,completed_at').eq('user_id', userId).eq('status', 'done').gte('completed_at', since).limit(ROW_CAP),
     supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('user_id', userId).in('status', ['todo', 'in_progress']).lt('due_at', nowIso),
     supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'completed'),
@@ -83,6 +89,8 @@ export async function getAnalyticsData(supabase: Supabase, userId: string): Prom
     supabase.from('import_runs').select('completed_at,items_duplicate').eq('user_id', userId).eq('status', 'completed').gte('completed_at', since).limit(ROW_CAP),
   ])
 
+  const { today, timeZone } = habitsData
+  const weeks = weekWindow(today)
   const results = [tasksDone, tasksOverdue, goalsCompleted, goalMilestones, goalProgress, sessions, quests, objectives, questMilestones, resourcesAdded, resourcesCompleted, backlog, attached, imports]
   const hasLoadError = habitsData.hasLoadError || results.some((result) => Boolean(result.error))
   const truncated = !habitsData.historyComplete || results.some((result) => Array.isArray(result.data) && result.data.length >= ROW_CAP)
@@ -111,13 +119,19 @@ export async function getAnalyticsData(supabase: Supabase, userId: string): Prom
 
   // Habit consistency (re-scored from schedules, so approximate). Today only counts once it has been logged,
   // so an unlogged today never lowers the rate (and is never "missed").
+  const logsByHabit = new Map<string, typeof habitsData.logs>()
+  for (const log of habitsData.logs) {
+    const list = logsByHabit.get(log.habit_id)
+    if (list) list.push(log)
+    else logsByHabit.set(log.habit_id, [log])
+  }
   const loggedToday = new Set(habitsData.logs.filter((log) => log.log_date === today).map((log) => log.habit_id))
   const habitWeeks = weeks.map((startDate) => {
     const weekEnd = addDays(startDate, 6) < today ? addDays(startDate, 6) : today
     const totals = habitsData.habits.reduce((sum, habit) => {
       const end = weekEnd === today && !loggedToday.has(habit.id) ? addDays(today, -1) : weekEnd
       if (end < startDate) return sum
-      const metrics = getPeriodMetrics(habit, habitsData.logs.filter((log) => log.habit_id === habit.id), startDate, end, today)
+      const metrics = getPeriodMetrics(habit, logsByHabit.get(habit.id) ?? [], startDate, end, today)
       return { opportunities: sum.opportunities + metrics.opportunities, completed: sum.completed + metrics.completed, missed: sum.missed + metrics.missed }
     }, { opportunities: 0, completed: 0, missed: 0 })
     return { ...totals, percentage: totals.opportunities ? Math.round((totals.completed / totals.opportunities) * 100) : null }
@@ -125,7 +139,7 @@ export async function getAnalyticsData(supabase: Supabase, userId: string): Prom
   const habitOpportunities = habitWeeks.reduce((sum, week) => sum + week.opportunities, 0)
   const habitCompleted = habitWeeks.reduce((sum, week) => sum + week.completed, 0)
   const activeHabits = habitsData.habits.filter((habit) => habit.active)
-  const streaks = activeHabits.map((habit) => ({ name: habit.name, ...getHabitStreaks(habit, habitsData.logs.filter((log) => log.habit_id === habit.id), today) }))
+  const streaks = activeHabits.map((habit) => ({ name: habit.name, ...getHabitStreaks(habit, logsByHabit.get(habit.id) ?? [], today) }))
   const bestStreak = streaks.reduce<(typeof streaks)[number] | null>((best, next) => (!best || next.current > best.current ? next : best), null)
   const habits: AnalyticsGroupData = {
     group: 'habits',

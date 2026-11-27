@@ -29,7 +29,7 @@ function formatValue(id: MetricId, value: number | null): string {
   if (value === null) return '—'
   const unit = unitOf(id)
   if (unit === 'percent') return `${value}%`
-  if (unit === 'minutes') return formatMinutes(value)
+  if (unit === 'minutes') return formatMinutes(Math.round(value))
   return value.toLocaleString('en-US')
 }
 
@@ -43,6 +43,14 @@ function summaryLabel(metric: EventMetric): string {
   return unit === 'percent' ? `${formatValue(metric.id, metric.summary)} over 12 weeks` : `${formatValue(metric.id, metric.summary)} in 12 weeks`
 }
 
+function comparisonLabel(metric: EventMetric): string | null {
+  const comparison = metric.comparison
+  if (!comparison) return null
+  const usual = formatValue(metric.id, comparison.usual)
+  const relation = comparison.direction === 'similar' ? `about the same as the usual ${usual}` : `${comparison.direction} than the usual ${usual}`
+  return `Last full week ${formatValue(metric.id, comparison.lastWeek)}, ${relation} (4 weeks before)`
+}
+
 function EventCard({ metric, labels }: { metric: EventMetric; labels: string[] }) {
   const definition = METRICS[metric.id]
   const approximate = definition.kind === 'event_approximate'
@@ -51,6 +59,7 @@ function EventCard({ metric, labels }: { metric: EventMetric; labels: string[] }
       <span className={a.tileLabel}>{definition.label}{approximate ? ' *' : ''}</span>
       <strong className={a.tileValue}>{metric.summary === null ? '—' : formatValue(metric.id, metric.summary)}</strong>
       <span className={a.tileLabel}>{summaryLabel(metric)}</span>
+      {comparisonLabel(metric) ? <span className={a.comparison}>{comparisonLabel(metric)}</span> : null}
       <WeeklyBars labels={labels.map(weekLabel)} values={metric.series} unit={unitOf(metric.id)} metricLabel={definition.label} />
       <div className="sr-only"><table>
         <caption>{definition.label} per week, Monday to Sunday</caption>
@@ -121,7 +130,7 @@ export function AnalyticsOverview({ data }: { data: AnalyticsData }) {
         <div>
           <p className={styles.kicker}>LIFE ANALYTICS · WEEKS RUN MONDAY TO SUNDAY · {data.timeZone.toUpperCase()}</p>
           <h1>Patterns, not a score.</h1>
-          <p className={styles.heroCopy}>Five separate views of the last 12 weeks. They are never combined into one number. &ldquo;Right now&rdquo; figures describe today only; &ldquo;Over time&rdquo; charts count events. A blank week means there was nothing to measure, not zero.</p>
+          <p className={styles.heroCopy}>Five separate views of the last 12 weeks. They are never combined into one number. &ldquo;Right now&rdquo; figures describe today only; &ldquo;Over time&rdquo; charts count events. A blank week means there was nothing to measure, not zero. Where there is enough history, the last full week is compared with the four weeks before it.</p>
         </div>
       </header>
       {data.hasLoadError ? <p className={styles.errorNotice} role="alert">Some figures could not be loaded and may be incomplete. Refresh to try again.</p> : null}

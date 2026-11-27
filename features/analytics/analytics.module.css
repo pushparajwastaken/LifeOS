@@ -20,6 +20,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.comparison {
+  color: var(--foreground);
+  font-size: 12px;
+}
+
 .stateGrid,
 .eventGrid,
 .breakdownGrid {

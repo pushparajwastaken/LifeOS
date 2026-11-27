@@ -182,3 +182,59 @@ export function formatMinutes(minutes: number): string {
   const rest = minutes % 60
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
 }
+
+// ---------------------------------------------------------------------------
+// Historical comparison (M9): last full week against the usual level of the four weeks before it.
+// Shown only where the history makes it meaningful; never a score, never coloured good/bad.
+// ---------------------------------------------------------------------------
+
+export const COMPARISON_BASELINE_WEEKS = 4
+
+/** Metrics that get a "last week vs usual" line. Sporadic or bad-news-only series (imports, missed check-ins) are left out. */
+export const COMPARABLE_METRICS: Partial<Record<MetricId, 'rate' | 'count'>> = {
+  tasks_completed: 'count',
+  tasks_on_time_rate: 'rate',
+  goal_progress_updates: 'count',
+  habit_consistency: 'rate',
+  learning_minutes: 'count',
+  learning_sessions: 'count',
+  learning_active_days: 'count',
+  resources_added: 'count',
+  resources_completed: 'count',
+}
+
+export type WeekComparison = {
+  lastWeek: number
+  usual: number
+  direction: 'higher' | 'lower' | 'similar'
+}
+
+/**
+ * Compares the last full week (the week before the current one) with the mean of the
+ * COMPARISON_BASELINE_WEEKS weeks before it.
+ * - Rates (`kind: 'rate'`, null = nothing to measure): needs last week measured and at least 3 of the 4 baseline weeks.
+ * - Counts and sums: needs the user's first recorded activity in the window to be on or before the first baseline
+ *   week, so weeks before they started using a feature are never read as zero effort.
+ * "Similar" means within 5 percentage points (rates) or within 10% of the usual level and less than one unit.
+ */
+export function compareLastWeek(series: WeeklySeries, kind: 'rate' | 'count'): WeekComparison | null {
+  const lastIndex = series.length - 2
+  const firstBaseline = lastIndex - COMPARISON_BASELINE_WEEKS
+  if (firstBaseline < 0) return null
+  const lastWeek = series[lastIndex]
+  if (lastWeek === null || lastWeek === undefined) return null
+  const baseline = series.slice(firstBaseline, lastIndex)
+  let usual: number
+  if (kind === 'rate') {
+    const measured = baseline.filter((value): value is number => value !== null)
+    if (measured.length < COMPARISON_BASELINE_WEEKS - 1) return null
+    usual = Math.round(measured.reduce((sum, value) => sum + value, 0) / measured.length)
+  } else {
+    const firstActive = series.findIndex((value) => value !== null && value > 0)
+    if (firstActive === -1 || firstActive > firstBaseline) return null
+    usual = Math.round((baseline.reduce<number>((sum, value) => sum + (value ?? 0), 0) / baseline.length) * 10) / 10
+  }
+  const delta = lastWeek - usual
+  const similar = kind === 'rate' ? Math.abs(delta) <= 5 : Math.abs(delta) < 1 || Math.abs(delta) <= usual * 0.1
+  return { lastWeek, usual, direction: similar ? 'similar' : delta > 0 ? 'higher' : 'lower' }
+}

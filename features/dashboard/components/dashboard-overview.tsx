@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { CalendarDays, Check, Flag, ListChecks } from 'lucide-react'
+import { BookOpen, CalendarDays, Check, CheckCheck, Flag, LineChart, ListChecks } from 'lucide-react'
+import { formatMinutes } from '@/features/analytics/analytics-domain'
 import {
   FocusPanel,
   GoalsPanel,
@@ -62,6 +63,31 @@ export function DashboardOverview({
           <span><Flag size={15} aria-hidden="true" /> Active goals</span>
           <strong>{data.goals.length}</strong>
         </div>
+      </section>
+
+      <section className="dashboard-week" aria-labelledby="dashboard-week-title">
+        <div className="dashboard-week-header">
+          <h2 id="dashboard-week-title">This week so far</h2>
+          <Link href="/analytics" className="dashboard-week-link"><LineChart size={14} aria-hidden="true" /> Patterns over 12 weeks</Link>
+        </div>
+        <div className="dashboard-summary">
+          <div className="dashboard-summary-item">
+            <span><CheckCheck size={15} aria-hidden="true" /> Tasks completed</span>
+            <strong>{data.week.tasksCompleted.thisWeek}</strong>
+            <small className="dashboard-week-note">Last week: {data.week.tasksCompleted.lastWeek}</small>
+          </div>
+          <div className="dashboard-summary-item">
+            <span><BookOpen size={15} aria-hidden="true" /> Learning time</span>
+            <strong>{formatMinutes(data.week.learningMinutes.thisWeek)}</strong>
+            <small className="dashboard-week-note">Last week: {formatMinutes(data.week.learningMinutes.lastWeek)}</small>
+          </div>
+          <div className="dashboard-summary-item">
+            <span><CalendarDays size={15} aria-hidden="true" /> Days with learning</span>
+            <strong>{data.week.learningDays.thisWeek}<small> / 7</small></strong>
+            <small className="dashboard-week-note">Last week: {data.week.learningDays.lastWeek}</small>
+          </div>
+        </div>
+        {data.week.truncated ? <p className="dashboard-week-note">Very busy fortnight: some records were not counted.</p> : null}
       </section>
 
       <section className="dashboard-detail-grid" aria-label="Daily focus and habits">
