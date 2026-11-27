@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // Bookmark exports are uploaded through a server action; the parser itself enforces a 5 MB limit.
+    serverActions: { bodySizeLimit: '6mb' },
+  },
   images: {
     unoptimized: true,
   },

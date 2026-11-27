@@ -43,15 +43,22 @@ Physical cleanup of expired soft-deleted rows happens lazily under the user's se
 | Table | Key columns | Notes |
 |---|---|---|
 | `learning_resources` | url (http(s) only), canonical_url (https, **unique per user**), url_source and title_source (user/youtube/chrome/x), title (1–500), resource_type (article, documentation, video, playlist, book, paper, course, post, repository, other), origin (manual/chrome_html/chrome_extension/youtube/x; **immutable**, enforced by `lifeos_origin_guard`), category, status (saved/in_progress/completed/archived), completed_at (set ⇔ completed), notes, generated `search_document` | TRUNCATE rejected (and cascading into sessions is blocked by the sessions guard) |
-| `resource_source_records` | resource_id, provider, external_id (**unique per user + provider**), source_url, source_title, provider_metadata (jsonb object), metadata_refreshed_at, sync_state, first_seen_at, last_seen_at | Provider data kept apart from the core record; cascades with its resource. Written by imports from M4. |
+| `resource_source_records` | resource_id, provider, external_id (**unique per user + provider**), source_url, source_title, provider_metadata (jsonb object), metadata_refreshed_at, sync_state, first_seen_at, last_seen_at | Provider data kept apart from the core record; cascades with its resource. Written by imports; `import_run_id` (M4, optional; FK `(import_run_id, user_id)` → import_runs **on delete set null (import_run_id)**) records which import touched the resource. |
 | `quest_resources` | quest_id, resource_id, position, added_at; PK (quest_id, resource_id) | Both FKs include user_id; no UPDATE grant |
 
 Canonical URLs (`canonicalizeUrl` in `features/resources/resource-domain.ts`): http(s) only; lowercase host without `www.`/trailing dot; default ports dropped; `https` in the key; fragment, `utm_*` and common click-id parameters removed; remaining parameters sorted; trailing slash removed; YouTube videos → `https://youtube.com/watch?v=ID`, playlists → `https://youtube.com/playlist?list=ID`; X/Twitter posts → `https://x.com/i/status/ID`. The original URL is kept for display.
+
+## Imports (M4)
+| Table | Key columns | Notes |
+|---|---|---|
+| `import_runs` | provider (chrome_html/chrome_extension/youtube/x), status (staged/completed/failed/cancelled/expired), file_name (≤255), items_seen/staged/skipped/imported/duplicate (≥0), error_code (slug only), expires_at (default now()+24h), completed_at (set ⇔ completed) | One row per upload; kept as import history. `updated_at` trigger. |
+| `import_candidates` | import_run_id (FK `(import_run_id, user_id)` **on delete cascade**), position, url (http(s)), canonical_url (https; **unique per run**), title (≤500), folder_path (≤1000), resource_type, source_added_at, already_in_library | Short-lived staging rows; deleted when the run is confirmed, cancelled or expires. No UPDATE grant. |
 
 ## Legacy tables kept unchanged
 `rabbit_holes`, `rabbit_hole_resources`, `rabbit_hole_experiments`, `study_sessions` are preserved and unused by the app. `knowledge_notes` is reused by the Notes page.
 
 ## Rollback notes
+- 20261126130000: drop the `resource_source_records.import_run_id` column (and its FK and index), then `import_candidates` and `import_runs`. Resources created by imports are unaffected.
 - 20261126120000: drop `quest_resources`, `resource_source_records`, the `learning_sessions.resource_id` column (after recreating the M2 view and guard), and `learning_resources`.
 - 20261126110000: drop `active_learning_sessions`, the `lifeos_preserve_session_topics` trigger on side_quests, `learning_sessions`, and both functions.
 - 20261126100000: no automatic down migration. If never used, drop `quest_notes`, `quest_milestones`, `quest_objectives`, `side_quests` and `lifeos_reject_truncate()`; no legacy object depends on them.

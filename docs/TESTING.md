@@ -14,10 +14,12 @@ node --test tests/*.test.mjs
 | `learning-sessions-migration.test.mjs` | Static allowlist for M2; only change to an existing table is the quest-delete trigger; soft-delete rules present |
 | `resource-domain.test.mjs` | URL canonicalization (unsafe schemes, host/query/port normalisation, tracking params, YouTube and X variants), type detection, validation, filters |
 | `resource-library-migration.test.mjs` | Static allowlist for M3 including the permitted changes to M2 objects; constants vs SQL; dedup and FK rules |
+| `bookmark-parser.test.mjs` | Netscape bookmark parsing: folders, entities, unsafe schemes skipped, in-file duplicates, limits, non-bookmark input |
+| `resource-imports-migration.test.mjs` | Static allowlist for M4; only change to an existing table is `resource_source_records.import_run_id`; constants vs SQL |
 | `side-quests-migration.test.mjs` | Static allowlist: every statement in the M1 migration matches an approved shape; legacy tables untouched; RLS, policies, grants, triggers present; every FK includes `user_id` |
 
 ## Staging integration tests (real Supabase Auth sessions)
-`tests/integration/side-quests-rls.test.mjs`, `learning-sessions-rls.test.mjs` and `resource-library-rls.test.mjs` are skipped unless these variables are set (never commit them):
+`tests/integration/side-quests-rls.test.mjs`, `learning-sessions-rls.test.mjs` , `resource-library-rls.test.mjs` and `resource-imports-rls.test.mjs` are skipped unless these variables are set (never commit them):
 `LIFEOS_TEST_SUPABASE_URL`, `LIFEOS_TEST_SUPABASE_ANON_KEY`, `LIFEOS_PRODUCTION_PROJECT_REF` (only used to refuse production),
 `LIFEOS_TEST_USER_A_EMAIL`, `LIFEOS_TEST_USER_A_PASSWORD`, `LIFEOS_TEST_USER_B_EMAIL`, `LIFEOS_TEST_USER_B_PASSWORD`.
 
@@ -56,6 +58,8 @@ Run in one transaction that ends with a deliberate exception (nothing persists):
 Rolled back: duplicate canonical URL per user rejected (other users allowed); javascript: URL rejected; origin change rejected; completed without timestamp rejected; cross-user link rejected; view exposes resource_id; TRUNCATE rejected; deleting a quest keeps resources; deleting a resource keeps sessions (including a soft-deleted one, which stays deleted) and removes source records.
 
 ## Browser QA (staging)
+M4 was exercised with a sample export: preview counts and skips, in-file and library duplicates, script-like titles rendered as text, empty selection, confirm with partial selection, re-import, cancel, non-bookmark/empty/oversize files, and the 375px layout.
+
 Run the dev server with a temporary, gitignored `.env.local` pointing at staging, sign in as a disposable user, and exercise the workflow. Remove `.env.local` afterwards.
 
 ## Not yet automated

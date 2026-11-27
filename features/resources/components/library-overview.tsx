@@ -37,7 +37,10 @@ export function LibraryOverview({ data, filters, notice }: { data: LibraryData; 
           <h1>Everything worth learning from, in one place.</h1>
           <p className={styles.heroCopy}>Save articles, videos, papers and courses, and attach them to the side quests they support. Saving is collecting; log a learning session when you actually study one.</p>
         </div>
-        <Link href="#add-resource" className={styles.primaryLink}><Plus size={16} aria-hidden="true" /> Add resource</Link>
+        <div className={styles.inlineForm} style={{ marginTop: 0 }}>
+          <Link href="/library/import" className={styles.subtleLink}>Import bookmarks</Link>
+          <Link href="#add-resource" className={styles.primaryLink}><Plus size={16} aria-hidden="true" /> Add resource</Link>
+        </div>
       </header>
 
       {message ? <p className={message.tone === 'error' ? styles.errorNotice : styles.notice} role={message.tone === 'error' ? 'alert' : 'status'}>{message.text}</p> : null}
