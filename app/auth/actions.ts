@@ -93,7 +93,7 @@ export async function signUpAction(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -105,7 +105,9 @@ export async function signUpAction(
   })
 
   if (error) return { error: signUpErrorMessage(error) }
-  redirect('/sign-up-success')
+  // With "Confirm email" off in Supabase Auth, sign-up returns a session: go straight into the app.
+  // With it on, there is no session yet, so the user is asked to confirm by email first.
+  redirect(data.session ? '/' : '/sign-up-success')
 }
 
 export async function requestPasswordResetAction(
