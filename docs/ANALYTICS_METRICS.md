@@ -1,6 +1,6 @@
 # Analytics metrics (contract for M5)
 
-Not implemented yet. This is the approved contract the implementation must follow.
+Implemented in M5: `features/analytics/analytics-domain.ts` (metric catalogue and weekly maths), `features/analytics/analytics-service.ts` (queries), `/analytics` (page). The catalogue in code is checked against this contract by `tests/analytics-domain.test.mjs`.
 
 ## Rules
 - Aggregate source tables on demand; no snapshot tables or materialized views.
@@ -19,3 +19,15 @@ Not implemented yet. This is the approved contract the implementation must follo
 | Learning progress | resources, objectives, milestones, quests completed (event_approximate: undoable); quest progress % (current_state, structured quests only) |
 
 Saving, importing, attaching or opening resources never counts as learning effort or activity.
+
+## Implementation decisions (M5)
+- **Reads only.** No new tables, views or migrations. Every query filters by `user_id` and runs as the signed-in user, so RLS applies.
+- **Window.** Events from one day before the first window week are fetched, then bucketed exactly by local date in the profile timezone; future-dated events are ignored.
+- **Tasks completed / on time.** Tasks with status `done`, bucketed by `completed_at`. On time means `completed_at <= due_at`; tasks without a due date are excluded from the rate (blank when none).
+- **Goal progress trend.** Shown as the number of progress updates per week (`goal_progress_entries.recorded_at`), since goals use different units.
+- **Habit consistency.** Completed ÷ scheduled opportunities per week, rest days excluded. Today counts only after it has been logged, so an unlogged today neither lowers the rate nor counts as missed. Skipped check-ins count against consistency but are not "missed". Best current streak uses the existing habit streak rules, active habits only.
+- **Learning effort.** From `active_learning_sessions` (soft-deleted sessions excluded). Pillar for quest sessions comes from the quest. Weekly target attainment counts active or paused quests with a target whose minutes this week (Monday to today) reach it.
+- **Resource collection.** Resources added by `created_at`; duplicate matches are the summed `items_duplicate` of completed imports; imports completed are completed `import_runs`. Backlog = saved + in progress; attached = distinct resources linked to any quest.
+- **Learning progress.** Completions by their timestamps (resources, objectives `achieved_at`, quest milestones, quests). Quest progress = mean milestone completion across open structured quests that have milestones; exploratory quests never get a percentage.
+- **Display.** Each group has a "Right now · as of today" zone (current_state only) and an "Over time · last 12 weeks" zone (events only, one bar per week, blank for weeks with nothing to measure). Approximate metrics carry an asterisk and a footnote listing their reasons. Each chart has an equivalent screen-reader table. Groups with no data show an empty state with a link to start.
+- **Limits.** Each source is capped at 5,000 rows per load; when a cap is hit, the page says older weeks may be undercounted.

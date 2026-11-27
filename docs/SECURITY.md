@@ -25,6 +25,8 @@
 
 - M4 two-user integration test: import runs and candidates isolated per user; staging into another user's run, attributing provenance to another user's run, editing candidates and anonymous access are rejected. Security advisor clean after 20261126130000.
 
+- M5 analytics only reads data: no new tables, functions or grants. Every query filters by `user_id` under the user's own session (RLS still applies), and the browser check confirmed a second user sees none of the first user's figures.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.

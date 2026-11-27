@@ -1,0 +1,51 @@
+.tile {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--background) 45%, var(--card));
+}
+
+.tileLabel {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.tileValue {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stateGrid,
+.eventGrid,
+.breakdownGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.stateGrid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.eventGrid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.breakdownGrid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-top: 18px; }
+
+.zoneTitle {
+  margin: 20px 0 10px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.footnote {
+  margin-top: 14px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .stateGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eventGrid { grid-template-columns: minmax(0, 1fr); }
+}
