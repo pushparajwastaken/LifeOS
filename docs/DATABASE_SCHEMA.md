@@ -11,7 +11,7 @@ Source of truth: `supabase/migrations/`. Applied in this order (text order of ve
 | 20261126110000 | `20261126110000_learning_sessions.sql` | Learning sessions, `active_learning_sessions` view, soft-delete guard, quest-delete topic trigger |
 | 20261126120000 | `20261126120000_resource_library.sql` | Resource Library tables, `learning_sessions.resource_id`, guard and view updated for it |
 | 20261126130000 | `20261126130000_resource_imports.sql` | `import_runs`, `import_candidates`, `resource_source_records.import_run_id` |
-| 20261128090000 | `20261128090000_harden_core_table_grants.sql` | Grants only: revokes everything from `anon` and `authenticated` on the 37 pre-M1 tables (core and Google Calendar), then grants `select, insert, update, delete` to `authenticated`. Legacy `rabbit_holes`, `rabbit_hole_resources`, `rabbit_hole_experiments`, `study_sessions` deliberately unchanged. **Applied to staging only.** |
+| 20261128090000 | `20261128090000_harden_core_table_grants.sql` | Grants only: revokes everything from `anon` and `authenticated` on the 37 pre-M1 tables (core and Google Calendar), then grants `select, insert, update, delete` to `authenticated`. Legacy `rabbit_holes`, `rabbit_hole_resources`, `rabbit_hole_experiments`, `study_sessions` deliberately unchanged. Applied to staging and production (2026-11-28). |
 
 ## Ownership pattern (every user-owned table)
 - `user_id uuid not null references auth.users on delete cascade`

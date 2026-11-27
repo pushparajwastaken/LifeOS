@@ -2,6 +2,7 @@
 
 Last updated: 2026-11-27 (core table grants hardened on staging). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
 "Verified" means exercised against the staging Supabase project (`vexgemyvefxhizavhpqc`), not production.
+Production (`qebolligppjfthobviqr`) has every migration through `20261128090000` since 2026-11-28; its schema matches staging exactly (see `PRODUCTION_MIGRATION_PLAN.md`). Signed-in pages on production still need the owner's own check.
 
 ## Platform and infrastructure
 
@@ -9,7 +10,7 @@ Last updated: 2026-11-27 (core table grants hardened on staging). Status values:
 |---|---|---|---|---|---|
 | Supabase CLI config + staging project | Complete | `supabase/config.toml`, `supabase/.gitignore`, `.gitignore` | – | Staging rebuilt from repo migrations; parity audit vs production | Production migration history uses different version numbers; never run `db push` against production (see ARCHITECTURE.md) |
 | Auth (email/password, Supabase Auth) | Complete | `app/auth/*`, `app/login`, `lib/supabase/*`, `proxy.ts` | core | Real-session tests on staging | – |
-| Core table grants hardening (no `anon` access, no `TRUNCATE`/`REFERENCES`/`TRIGGER`) | **Complete on staging**; production pending owner authorization | `supabase/migrations/20261128090000_harden_core_table_grants.sql` | 20261128090000 | `tests/core-grants-migration.test.mjs`; staging grant audit, anon API probe, rolled-back TRUNCATE check, integration tests 4/4, browser smoke writing to every changed table, full export | Legacy tables intentionally unchanged |
+| Core table grants hardening (no `anon` access, no `TRUNCATE`/`REFERENCES`/`TRIGGER`) | **Complete** (staging and production, 2026-11-28) | `supabase/migrations/20261128090000_harden_core_table_grants.sql` | 20261128090000 | `tests/core-grants-migration.test.mjs`; staging grant audit, anon API probes on both projects, rolled-back TRUNCATE check, integration tests 4/4, browser smoke on staging | Legacy tables intentionally unchanged |
 | Auth trigger hardening (`lifeos_handle_new_user` EXECUTE) | Complete | `supabase/migrations/20261126090000_revoke_handle_new_user_execute.sql` | 20261126090000 | Staging advisor clean; sign-up still creates profile | Applied to staging only; production already in this state |
 | Navigation (sidebar incl. Side Quests, Learning log, Library; breadcrumbs; mobile bar unchanged) | Complete | `components/layout/app-shell.tsx` | – | Browser QA desktop + 375px | – |
 | Page session helper | Complete | `lib/page-session.ts` | – | Used by quest and notes pages | – |

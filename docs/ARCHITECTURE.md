@@ -29,6 +29,16 @@ tests/                  node:test unit and static tests; tests/integration/ for 
 ## Environments and migrations
 - **Staging** `vexgemyvefxhizavhpqc` is rebuilt from `supabase/migrations/` with the pinned CLI: `npx supabase@3.1.0 db push --remote=vexgemyvefxhizavhpqc`.
 - **Production** `qebolligppjfthobviqr` recorded its original migrations under different version numbers (`20261111175517`, `20261112093505`, plus seven read-only verification records). **Do not run `db push` against production** until its history is realigned in a separately approved step; it would try to re-apply the core migrations.
+- Later migrations are applied to production one file at a time, unchanged, with the Supabase `apply_migration` call (owner-approved per rollout). Production version ↔ repository file (2026-11-28 rollout; recorded statements verified identical to the files, ignoring comments and whitespace):
+
+  | Production version | Name | Repository file |
+  |---|---|---|
+  | 20261127190000 | revoke_handle_new_user_execute | `20261126090000_revoke_handle_new_user_execute.sql` |
+  | 20261127190036 | side_quests_core | `20261126100000_side_quests_core.sql` |
+  | 20261127190104 | learning_sessions | `20261126110000_learning_sessions.sql` |
+  | 20261127190138 | resource_library | `20261126120000_resource_library.sql` |
+  | 20261127190156 | resource_imports | `20261126130000_resource_imports.sql` |
+  | 20261127190210 | harden_core_table_grants | `20261128090000_harden_core_table_grants.sql` |
 - CLI 3.1.0 orders migrations by comparing versions as text. Keep the CLI pinned and re-verify ordering before upgrading.
 - Never edit an applied migration; add a new one.
 
