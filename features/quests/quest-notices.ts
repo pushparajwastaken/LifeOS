@@ -95,6 +95,12 @@ export const QUEST_NOTICES: Record<string, { text: string; tone: 'info' | 'error
   'goal-milestone-deleted': { text: 'Milestone removed.', tone: 'info' },
   'profile-saved': { text: 'Profile saved. Days, weeks and due dates now follow your timezone.', tone: 'info' },
   'profile-invalid': { text: 'Choose a timezone from the list and keep the name under 80 characters. Nothing was saved.', tone: 'error' },
+  'planner-plan': { text: 'Task planned for this day.', tone: 'info' },
+  'planner-next-day': { text: 'Task moved to the next day.', tone: 'info' },
+  'planner-already': { text: 'That task had already been moved, so it was left where it is.', tone: 'info' },
+  'planner-unplan': { text: 'Task unscheduled. It is back in your backlog.', tone: 'info' },
+  'review-saved': { text: 'Daily review saved.', tone: 'info' },
+  'review-invalid': { text: 'Reviews can be written for today or earlier days, up to 2,000 characters per answer. Nothing was saved.', tone: 'error' },
   'record-not-found': { text: 'That record could not be found in your workspace.', tone: 'error' },
   'save-failed': { text: 'That change could not be saved. Try again in a moment.', tone: 'error' },
 }

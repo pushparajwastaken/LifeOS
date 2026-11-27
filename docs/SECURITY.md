@@ -35,6 +35,8 @@
 
 - Settings (M9): the profile update is limited to the signed-in user's row and validates the timezone against the runtime. The data export (`/settings/export`) runs under the user's session (RLS) and also filters by owner; table names come from a static list checked against the migrations by a test; responses are `no-store` attachments; signed-out requests are redirected by the proxy. No tokens are stored in LifeOS tables, so none can be exported.
 
+- Daily planner (M9): planning reads the task by id and `user_id`, only changes open tasks, and refuses if the due date differs from the one the user saw; reviews are upserted on `(user_id, review_date)` for the signed-in user and never for future days; task actions accept the planner as a return path only in the form `/planner?date=YYYY-MM-DD`.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.

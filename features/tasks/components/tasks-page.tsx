@@ -5,6 +5,7 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDuration } from '@/features/learning/learning-domain'
+import { IconSubmitButton } from '@/features/quests/components/icon-submit-button'
 import { SubmitButton } from '@/features/quests/components/submit-button'
 import { resolveNotice } from '@/features/quests/quest-notices'
 import styles from '@/features/quests/quests.module.css'
@@ -78,7 +79,7 @@ function StatusButton({ task, intent, returnTo, children, label, variant = 'outl
       <input type="hidden" name="intent" value={intent} />
       <input type="hidden" name="returnTo" value={returnTo} />
       {variant === 'icon'
-        ? <button type="submit" className={styles.iconButton} data-done={task.status === 'done' ? 'true' : undefined} aria-label={label}>{children}</button>
+        ? <IconSubmitButton label={label ?? ''} done={task.status === 'done'}>{children}</IconSubmitButton>
         : <SubmitButton variant="outline" size="sm" pendingLabel="Saving…">{children}</SubmitButton>}
     </form>
   )

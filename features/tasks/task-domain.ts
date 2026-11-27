@@ -69,10 +69,12 @@ export function tasksHref(filters: TaskFilters, change: Partial<TaskFilters> = {
   return query ? `/tasks?${query}` : '/tasks'
 }
 
-/** Only same-page return paths are accepted from forms. */
+/** Only the tasks page (with its filters) or the planner (with a date) are accepted as return paths from forms. */
 export function safeTasksReturn(value: unknown): string {
-  if (typeof value !== 'string' || value.length > 300 || !/^\/tasks(\?[A-Za-z0-9=&%._+-]*)?$/.test(value)) return '/tasks'
-  return value
+  if (typeof value !== 'string' || value.length > 300) return '/tasks'
+  if (/^\/tasks(\?[A-Za-z0-9=&%._+-]*)?$/.test(value)) return value
+  if (/^\/planner(\?date=\d{4}-\d{2}-\d{2})?$/.test(value)) return value
+  return '/tasks'
 }
 
 /** Escapes LIKE wildcards so a search is always a literal substring match. */

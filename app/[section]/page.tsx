@@ -1,10 +1,9 @@
 import { notFound } from 'next/navigation'
-import { ArrowUpRight, BookOpen, CalendarDays, Dumbbell, FolderKanban, MessageCircle, Sparkles } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Dumbbell, FolderKanban, MessageCircle, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { AuthenticatedAppShell } from '@/components/layout/authenticated-app-shell'
 
 const sections: Record<string, { title: string; category: string; description: string; icon: typeof BookOpen; phase: string }> = {
-  planner: { title: 'Daily planner', category: 'Workspace', description: 'Make space for what matters, one intentional day at a time.', icon: CalendarDays, phase: 'Phase 3' },
   physical: { title: 'Physical', category: 'Development pillar', description: 'Build a stronger relationship with your body through movement, recovery and rest.', icon: Dumbbell, phase: 'Phase 4' },
   intellectual: { title: 'Intellectual', category: 'Development pillar', description: 'Keep curiosity moving with reading, ideas and a growing personal knowledge vault.', icon: BookOpen, phase: 'Phase 4' },
   academic: { title: 'Academic', category: 'Development pillar', description: 'Turn focused study into durable understanding and meaningful progress.', icon: Sparkles, phase: 'Phase 4' },

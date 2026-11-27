@@ -55,7 +55,9 @@ test('filters fall back to safe defaults and build canonical links', () => {
 
 test('return paths are limited to the tasks page', () => {
   assert.equal(safeTasksReturn('/tasks?view=done&q=a+b'), '/tasks?view=done&q=a+b')
-  for (const bad of ['https://evil.test/tasks', '//evil.test', '/tasks/../admin', '/tasks?x=<script>', '/habits', null, 'x'.repeat(400)]) {
+  assert.equal(safeTasksReturn('/planner'), '/planner')
+  assert.equal(safeTasksReturn('/planner?date=2026-11-28'), '/planner?date=2026-11-28')
+  for (const bad of ['/planner?date=x', '/planner/../tasks', 'https://evil.test/tasks', '//evil.test', '/tasks/../admin', '/tasks?x=<script>', '/habits', null, 'x'.repeat(400)]) {
     assert.equal(safeTasksReturn(bad), '/tasks', String(bad))
   }
 })
