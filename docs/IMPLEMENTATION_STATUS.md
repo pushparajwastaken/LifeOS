@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-11-27 (M7 Chrome extension). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
+Last updated: 2026-11-27 (M8 X feasibility review). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
 "Verified" means exercised against the staging Supabase project (`vexgemyvefxhizavhpqc`), not production.
 
 ## Platform and infrastructure
@@ -32,7 +32,7 @@ Last updated: 2026-11-27 (M7 Chrome extension). Status values: **Complete**, **P
 | **Life Analytics (M5)** | Five separate groups (productivity, habit consistency, learning effort, resource collection, learning progress); declared metric kinds; "Right now" and 12-week "Over time" zones; Monday weeks in the profile timezone; blanks instead of 0%; approximation footnotes; breakdowns by quest, pillar, type and origin; accessible tables for every chart; empty states | **Complete** (page) | `features/analytics/*`, `app/analytics/*` | none (reads existing tables) | `tests/analytics-domain.test.mjs`; seeded two-user browser QA on staging (desktop and 375px) | Home dashboard integration not done yet |
 | YouTube (M6) | – | Blocked | – | – | – | Needs custom domain, Google OAuth verification, privacy/terms pages, Vercel Connect revocation check, pg_cron |
 | **Chrome extension (M7)** | MV3 extension: pick bookmark folders, approve in an extension window, send to `/library/import` for the usual review; optional read-only `bookmarks` permission with "give back access"; origin allowlist set at build time; server-side validation and re-canonicalisation | **Complete** (unpacked; not in the Web Store) | `extension/*`, `scripts/build-extension.mjs`, `features/imports/extension-payload.ts`, `features/imports/components/extension-import.tsx` | none (uses `chrome_extension` values already allowed by M3/M4) | `tests/extension-lib.test.mjs`, `tests/extension-payload.test.mjs`; staging browser QA of the page side with the real content script and stubbed Chrome APIs | Not yet loaded in a real Chrome profile; production origin must be added at build time |
-| X integration (M8) | – | Blocked | – | – | – | Feasibility review: paid API, OAuth path unconfirmed |
+| X integration (M8) | Post links saved by hand (canonical `x.com/i/status/ID`) | Reviewed; API sync not planned | `docs/X_FEASIBILITY.md` | – | – | Owner-only sync possible later: needs X approval, credits, Vercel Connect confirmation and a 24-hour deletion/refresh job |
 | Physical | – | Placeholder | `app/[section]/page.tsx` | core (workouts, running_sessions, body_metrics, sleep_logs) | – | No UI |
 | Settings | Google Calendar integration | Partial | `app/settings/page.tsx`, `features/calendar/*` | – | – | Profile, timezone, preferences, data management missing |
 | Other pillars (Intellectual, Academic, Professional, Communication) | – | Placeholder | `app/[section]/page.tsx` | core tables exist | – | No UI |

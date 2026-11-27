@@ -12,8 +12,8 @@ Each milestone lands as its own reviewable branch with migrations tested on stag
 | M5 | Life Analytics: metric kinds (`event_exact`, `event_approximate`, `current_state`), five metric groups, Right now / Over time zones; dashboard integration | Done on branch `feature/m5-life-analytics` (Home dashboard integration still to do) | M2–M4 |
 | M6 | YouTube integration with 30-day refresh/purge and `pg_cron` | Blocked externally | Custom domain, Google verification, privacy/terms pages, Vercel Connect revocation check |
 | M7 | Chrome extension (optional bookmarks permission, page-to-extension messaging) | Done on branch `feature/m7-chrome-extension` (manual check in real Chrome still to do) | M4 |
-| M8 | X integration feasibility | Next (review only) | Paid API, OAuth path |
-| M9 | Advanced analytics and product polish | Planned | M5 |
+| M8 | X integration feasibility | Done: review in `docs/X_FEASIBILITY.md`; recommendation is links only, no API sync for now | Paid API, OAuth path |
+| M9 | Advanced analytics and product polish | Next | M5 |
 
 ## Existing modules still to complete (in parallel)
 - **Tasks**: task page with edit, delete, reopen, due dates, filters, search.
