@@ -25,6 +25,8 @@ export async function getPageSession() {
     userId: user.id,
     userName: profileName && profileName !== 'Your space' ? profileName : fallbackName,
     userEmail: user.email ?? '',
+    /** The stored profile name exactly as saved (may be the 'Your space' default or empty). */
+    profileDisplayName: profileName || null,
     timeZone: normalizeTimeZone(profile?.timezone),
   }
 }

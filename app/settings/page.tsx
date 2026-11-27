@@ -1,31 +1,30 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/layout/app-shell'
 import { CalendarSettings } from '@/features/calendar/calendar-settings'
 import { getCalendarSettingsData } from '@/features/calendar/calendar-service'
+import { AccountSettings } from '@/features/settings/components/account-settings'
+import styles from '@/features/quests/quests.module.css'
+import { getPageSession } from '@/lib/page-session'
 
 export const metadata: Metadata = {
   title: 'Settings',
-  description: 'Manage your LifeOS account and connected integrations.',
+  description: 'Your profile, timezone, data export and connected integrations.',
 }
 
 type PageProps = {
-  searchParams: Promise<{ authorization?: string | string[] }>
+  searchParams: Promise<{ authorization?: string | string[]; notice?: string | string[] }>
 }
 
-export default async function SettingsPage({ searchParams }: PageProps) {
-  const [data, params] = await Promise.all([
-    getCalendarSettingsData(),
-    searchParams,
-  ])
-  if (!data) redirect('/login')
-  const authorizationNotice = Array.isArray(params.authorization)
-    ? params.authorization[0]
-    : params.authorization
+const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
+export default async function SettingsPage({ searchParams }: PageProps) {
+  const [session, calendar, params] = await Promise.all([getPageSession(), getCalendarSettingsData(), searchParams])
   return (
-    <AppShell userName={data.userName} userEmail={data.userEmail}>
-      <CalendarSettings connection={data.connection} authorizationNotice={authorizationNotice} />
+    <AppShell userName={session.userName} userEmail={session.userEmail}>
+      <div className={styles.page}>
+        <AccountSettings displayName={session.profileDisplayName} timeZone={session.timeZone} email={session.userEmail} notice={first(params.notice)} />
+        {calendar ? <CalendarSettings connection={calendar.connection} authorizationNotice={first(params.authorization)} embedded /> : null}
+      </div>
     </AppShell>
   )
 }

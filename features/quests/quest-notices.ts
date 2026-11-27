@@ -93,6 +93,8 @@ export const QUEST_NOTICES: Record<string, { text: string; tone: 'info' | 'error
   'goal-milestone-done': { text: 'Milestone reached.', tone: 'info' },
   'goal-milestone-reopened': { text: 'Milestone reopened.', tone: 'info' },
   'goal-milestone-deleted': { text: 'Milestone removed.', tone: 'info' },
+  'profile-saved': { text: 'Profile saved. Days, weeks and due dates now follow your timezone.', tone: 'info' },
+  'profile-invalid': { text: 'Choose a timezone from the list and keep the name under 80 characters. Nothing was saved.', tone: 'error' },
   'record-not-found': { text: 'That record could not be found in your workspace.', tone: 'error' },
   'save-failed': { text: 'That change could not be saved. Try again in a moment.', tone: 'error' },
 }

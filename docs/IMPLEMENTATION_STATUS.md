@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-11-27 (M9 Goals). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
+Last updated: 2026-11-27 (M9 Settings). Status values: **Complete**, **Partial**, **UI only**, **Backend only**, **Placeholder**, **Missing**, **Blocked**.
 "Verified" means exercised against the staging Supabase project (`vexgemyvefxhizavhpqc`), not production.
 
 ## Platform and infrastructure
@@ -34,6 +34,6 @@ Last updated: 2026-11-27 (M9 Goals). Status values: **Complete**, **Partial**, *
 | **Chrome extension (M7)** | MV3 extension: pick bookmark folders, approve in an extension window, send to `/library/import` for the usual review; optional read-only `bookmarks` permission with "give back access"; origin allowlist set at build time; server-side validation and re-canonicalisation | **Complete** (unpacked; not in the Web Store) | `extension/*`, `scripts/build-extension.mjs`, `features/imports/extension-payload.ts`, `features/imports/components/extension-import.tsx` | none (uses `chrome_extension` values already allowed by M3/M4) | `tests/extension-lib.test.mjs`, `tests/extension-payload.test.mjs`; staging browser QA of the page side with the real content script and stubbed Chrome APIs | Not yet loaded in a real Chrome profile; production origin must be added at build time |
 | X integration (M8) | Post links saved by hand (canonical `x.com/i/status/ID`) | Reviewed; API sync not planned | `docs/X_FEASIBILITY.md` | – | – | Owner-only sync possible later: needs X approval, credits, Vercel Connect confirmation and a 24-hour deletion/refresh job |
 | Physical | – | Placeholder | `app/[section]/page.tsx` | core (workouts, running_sessions, body_metrics, sleep_logs) | – | No UI |
-| Settings | Google Calendar integration | Partial | `app/settings/page.tsx`, `features/calendar/*` | – | – | Profile, timezone, preferences, data management missing |
+| **Settings** | Profile: display name and timezone (current IANA names, "use this device's timezone" with legacy-alias matching, live local time); account email and sign out (also on mobile); "Download my data": one JSON file with the user's own rows from every user-owned table (static table list, paged past the 1,000-row API limit, up to 20,000 rows per table, no-store); Google Calendar integration section | **Complete** (account deletion and email change not offered) | `features/settings/*`, `app/settings/*`, `features/calendar/calendar-settings.tsx` | none | `tests/settings-domain.test.mjs` (incl. a check that every migration table with `user_id` is exported); staging browser QA (export of 1,005 sessions, other user's data absent, signed-out request redirected, 375px) | Deleting an account needs a server-side function or service role, which the app does not hold; `profiles.preferences` is not used yet |
 | Other pillars (Intellectual, Academic, Professional, Communication) | – | Placeholder | `app/[section]/page.tsx` | core tables exist | – | No UI |
 | Weekly reviews | – | Placeholder | `app/[section]/page.tsx` (`/reviews`) | core | – | No UI |

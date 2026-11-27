@@ -15,6 +15,8 @@ import styles from '@/features/calendar/calendar-settings.module.css'
 type Props = {
   connection: CalendarConnectionView
   authorizationNotice?: string
+  /** Inside the Settings page, which provides its own page header. */
+  embedded?: boolean
 }
 
 function formatDate(value: string | null): string {
@@ -58,7 +60,7 @@ function noticeText(notice: string | undefined): string | null {
   }
 }
 
-export function CalendarSettings({ connection, authorizationNotice }: Props) {
+export function CalendarSettings({ connection, authorizationNotice, embedded = false }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const authorizationFeedback = noticeText(authorizationNotice)
@@ -156,13 +158,15 @@ export function CalendarSettings({ connection, authorizationNotice }: Props) {
 
   return (
     <div className={styles.page}>
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>LIFEOS PREFERENCES</p>
-          <h1>Settings</h1>
-          <p className={styles.intro}>Manage your connected services and synchronization preferences.</p>
-        </div>
-      </header>
+      {embedded ? null : (
+        <header className={styles.pageHeader}>
+          <div>
+            <p className={styles.eyebrow}>LIFEOS PREFERENCES</p>
+            <h1>Settings</h1>
+            <p className={styles.intro}>Manage your connected services and synchronization preferences.</p>
+          </div>
+        </header>
+      )}
 
       {feedback && (
         <p className={feedbackIsError ? styles.feedbackError : styles.feedback} role={feedbackIsError ? 'alert' : 'status'}>

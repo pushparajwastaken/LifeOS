@@ -33,6 +33,8 @@
 
 - Goals (M9): every child write (readings, milestones, status) first loads the goal by id and `user_id` on the server; the composite `(goal_id, user_id)` foreign keys and RLS enforce the same in the database. Verified on staging by replaying another user's form.
 
+- Settings (M9): the profile update is limited to the signed-in user's row and validates the timezone against the runtime. The data export (`/settings/export`) runs under the user's session (RLS) and also filters by owner; table names come from a static list checked against the migrations by a test; responses are `no-store` attachments; signed-out requests are redirected by the proxy. No tokens are stored in LifeOS tables, so none can be exported.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.
