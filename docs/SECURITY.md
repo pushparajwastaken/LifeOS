@@ -37,6 +37,8 @@
 
 - Daily planner (M9): planning reads the task by id and `user_id`, only changes open tasks, and refuses if the due date differs from the one the user saw; reviews are upserted on `(user_id, review_date)` for the signed-in user and never for future days; task actions accept the planner as a return path only in the form `/planner?date=YYYY-MM-DD`.
 
+- Physical (M9): every exercise and set write first checks that the workout (and the exercise) belongs to the signed-in user; deletes go through a fixed map of four tables (own-property check, so no other table name can be reached) and filter by `user_id`; entries can't be dated in the future. Verified on staging by replaying another user's form.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.
