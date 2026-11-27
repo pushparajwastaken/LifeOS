@@ -17,7 +17,7 @@ const base = { title: 'Write report', description: '', priority: 'high', pillar:
 
 test('task input is trimmed, optional fields become null', () => {
   const result = taskInputSchema.parse({ ...base, title: '  Write report  ', description: '  ', estimatedMinutes: '45', pillar: 'professional' })
-  assert.deepEqual(result, { title: 'Write report', description: null, priority: 'high', pillar: 'professional', dueDate: '', dueTime: '', estimatedMinutes: 45 })
+  assert.deepEqual(result, { title: 'Write report', description: null, priority: 'high', pillar: 'professional', dueDate: '', dueTime: '', estimatedMinutes: 45, repeat: 'none' })
 })
 
 test('task input rejects bad values', () => {
@@ -93,4 +93,22 @@ test('open tasks are grouped as overdue, today, upcoming and undated', () => {
     ['none', ['none-high', 'none-low']],
   ])
   assert.deepEqual(groupOpenTasks([], '2026-11-27', now), [])
+})
+
+test('repeating tasks: next due dates and stored rule', async () => {
+  const { nextDueDate, readRepeat, recurrenceFor } = await import('../features/tasks/task-recurrence.ts')
+  assert.equal(nextDueDate('2026-11-27', 'daily', '2026-11-27'), '2026-11-28')
+  assert.equal(nextDueDate('2026-11-27', 'weekly', '2026-11-27'), '2026-12-04')
+  assert.equal(nextDueDate('2026-11-27', 'weekdays', '2026-11-27'), '2026-11-30') // Friday -> Monday
+  assert.equal(nextDueDate('2026-01-31', 'monthly', '2026-01-31'), '2026-02-28') // clamped to the month
+  assert.equal(nextDueDate('2028-01-31', 'monthly', '2028-01-31'), '2028-02-29')
+  assert.equal(nextDueDate('2026-11-01', 'daily', '2026-11-27'), '2026-11-28') // overdue: next one is in the future
+  assert.equal(nextDueDate('2026-11-02', 'weekly', '2026-11-27'), '2026-11-30')
+  assert.deepEqual(recurrenceFor('weekly'), { every: 'weekly' })
+  assert.equal(recurrenceFor('none'), null)
+  assert.equal(readRepeat({ every: 'monthly' }), 'monthly')
+  for (const bad of [null, {}, { every: 'hourly' }, { every: 'none' }, ['weekly'], 'weekly']) assert.equal(readRepeat(bad), 'none')
+  const { taskInputSchema } = await import('../features/tasks/task-domain.ts')
+  assert.equal(taskInputSchema.safeParse({ ...base, repeat: 'yearly' }).success, false)
+  assert.equal(taskInputSchema.parse({ ...base, repeat: 'weekdays' }).repeat, 'weekdays')
 })

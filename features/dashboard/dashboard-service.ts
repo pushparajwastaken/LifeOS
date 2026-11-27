@@ -71,6 +71,7 @@ export type DashboardWeek = {
   tasksCompleted: WeekPair
   learningMinutes: WeekPair
   learningDays: WeekPair
+  workouts: WeekPair
   truncated: boolean
 }
 
@@ -151,7 +152,7 @@ export async function getDashboardData(
   const since = `${addDays(weeks[0], -1)}T00:00:00Z`
   const WEEK_ROW_CAP = 2000
 
-  const [taskResult, habitResult, goalResult, doneResult, sessionResult] = await Promise.all([
+  const [taskResult, habitResult, goalResult, doneResult, sessionResult, workoutResult] = await Promise.all([
     supabase
       .from('tasks')
       .select('id,title,status,priority,pillar,due_at,estimated_minutes,created_at')
@@ -187,6 +188,13 @@ export async function getDashboardData(
       .eq('user_id', userId)
       .gte('started_at', since)
       .limit(WEEK_ROW_CAP),
+    supabase
+      .from('workouts')
+      .select('performed_at')
+      .eq('user_id', userId)
+      .eq('rest_day', false)
+      .gte('performed_at', since)
+      .limit(WEEK_ROW_CAP),
   ])
 
   const local = (iso: string) => localDateKey(iso, timeZone)
@@ -197,6 +205,7 @@ export async function getDashboardData(
     tasksCompleted: pair(countByWeek(doneDates, weeks, today)),
     learningMinutes: pair(sumByWeek(sessionRows, weeks, today)),
     learningDays: pair(distinctDaysByWeek(sessionRows.map((row) => row.date), weeks, today)),
+    workouts: pair(countByWeek(((workoutResult.data ?? []) as Array<{ performed_at: string }>).map((row) => local(row.performed_at)), weeks, today)),
     truncated: (doneResult.data ?? []).length >= WEEK_ROW_CAP || (sessionResult.data ?? []).length >= WEEK_ROW_CAP,
   }
 
@@ -272,7 +281,7 @@ export async function getDashboardData(
     goals,
     week,
     hasLoadError: Boolean(
-      profileError || taskResult.error || habitResult.error || goalResult.error || habitLogError || doneResult.error || sessionResult.error,
+      profileError || taskResult.error || habitResult.error || goalResult.error || habitLogError || doneResult.error || sessionResult.error || workoutResult.error,
     ),
   }
 }

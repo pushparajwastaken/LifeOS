@@ -9,7 +9,7 @@ const ROW_CAP = 2000
 
 export type WorkoutRow = { id: string; title: string; performed_at: string; rest_day: boolean; notes: string | null }
 export type RunRow = { id: string; started_at: string; distance: number; distance_unit: 'km' | 'mi'; duration_seconds: number; notes: string | null }
-export type BodyRow = { id: string; measured_at: string; weight: number | null; weight_unit: 'kg' | 'lb'; notes: string | null }
+export type BodyRow = { id: string; measured_at: string; weight: number | null; weight_unit: 'kg' | 'lb'; measurements: unknown; notes: string | null }
 export type SleepRow = { id: string; sleep_date: string; duration_minutes: number; recovery_score: number | null; notes: string | null }
 
 export type ActivityItem =
@@ -38,7 +38,7 @@ export async function getPhysicalData(supabase: Supabase, userId: string, today:
     supabase.from('workouts').select('id,title,performed_at,rest_day,notes').eq('user_id', userId).gte('performed_at', since).order('performed_at', { ascending: false }).limit(ROW_CAP),
     supabase.from('running_sessions').select('id,started_at,distance,distance_unit,duration_seconds,notes').eq('user_id', userId).gte('started_at', since).order('started_at', { ascending: false }).limit(ROW_CAP),
     supabase.from('sleep_logs').select('id,sleep_date,duration_minutes,recovery_score,notes').eq('user_id', userId).gte('sleep_date', addDays(weeks[0], -1)).order('sleep_date', { ascending: false }).limit(ROW_CAP),
-    supabase.from('body_metrics').select('id,measured_at,weight,weight_unit,notes').eq('user_id', userId).order('measured_at', { ascending: false }).limit(200),
+    supabase.from('body_metrics').select('id,measured_at,weight,weight_unit,measurements,notes').eq('user_id', userId).order('measured_at', { ascending: false }).limit(200),
   ])
   const workouts = (workoutResult.data ?? []) as WorkoutRow[]
   const runs = ((runResult.data ?? []) as RunRow[]).map((row) => ({ ...row, distance: num(row.distance) }))

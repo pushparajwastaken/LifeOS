@@ -27,6 +27,7 @@ import {
   type TaskPillar,
   type TaskPriority,
 } from '../task-domain'
+import { TASK_REPEATS, TASK_REPEAT_LABELS } from '../task-recurrence'
 import type { TaskView, TasksPageData } from '../task-service'
 
 type Props = { data: TasksPageData; filters: TaskFilters; today: string; timeZone: string; notice?: string }
@@ -64,6 +65,13 @@ function TaskFields({ prefix, task, today }: { prefix: string; task?: TaskView; 
         <FieldLabel htmlFor={`${prefix}-estimate`}>Estimate (minutes)</FieldLabel>
         <Input id={`${prefix}-estimate`} name="estimatedMinutes" type="number" inputMode="numeric" min={1} max={TASK_LIMITS.maxEstimate} step={1} defaultValue={task?.estimatedMinutes ?? ''} />
       </Field>
+      <Field>
+        <FieldLabel htmlFor={`${prefix}-repeat`}>Repeats</FieldLabel>
+        <select id={`${prefix}-repeat`} name="repeat" className={styles.nativeSelect} defaultValue={task?.repeat ?? 'none'}>
+          {TASK_REPEATS.map((repeat) => <option key={repeat} value={repeat}>{TASK_REPEAT_LABELS[repeat]}</option>)}
+        </select>
+        <FieldDescription>Completing a repeating task adds the next one.</FieldDescription>
+      </Field>
       <Field style={{ gridColumn: '1 / -1' }}>
         <FieldLabel htmlFor={`${prefix}-description`}>Notes</FieldLabel>
         <Textarea id={`${prefix}-description`} name="description" maxLength={TASK_LIMITS.description} defaultValue={task?.description ?? ''} />
@@ -100,6 +108,7 @@ function TaskRow({ task, today, timeZone, returnTo }: { task: TaskView; today: s
     dueLabel(task, today, timeZone),
     task.pillar ? TASK_PILLAR_LABELS[task.pillar as TaskPillar] ?? task.pillar : null,
     task.estimatedMinutes ? formatDuration(task.estimatedMinutes) : null,
+    task.repeat !== 'none' ? TASK_REPEAT_LABELS[task.repeat] : null,
     task.status === 'done' && task.completedAt ? `Completed ${new Intl.DateTimeFormat('en-US', { timeZone, month: 'short', day: 'numeric' }).format(new Date(task.completedAt))}` : null,
   ].filter(Boolean).join(' · ')
   return (

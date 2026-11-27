@@ -24,6 +24,7 @@ import {
   Settings2,
   ListChecks,
   CalendarRange,
+  NotebookPen,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -56,6 +57,7 @@ const growthLinks = [
   { label: 'Learning log', href: '/learning', icon: Timer },
   { label: 'Library', href: '/library', icon: BookMarked },
   { label: 'Knowledge vault', href: '/knowledge', icon: Library },
+  { label: 'Weekly review', href: '/reviews', icon: NotebookPen },
   { label: 'Analytics', href: '/analytics', icon: Activity },
 ]
 

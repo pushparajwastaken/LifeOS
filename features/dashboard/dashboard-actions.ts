@@ -10,6 +10,7 @@ import {
   OPEN_TASK_STATUSES,
   getTaskStatusUpdate,
 } from '@/features/tasks/task-status'
+import { COMPLETED_TASK_SELECT, createNextOccurrence, type CompletedTask } from '@/features/tasks/task-recurrence-server'
 import { DASHBOARD_PILLAR_IDS, getDurationUnit, getLocalDateKey, normalizeTimeZone } from './dashboard-service'
 
 const taskSchema = z.object({
@@ -78,10 +79,14 @@ export async function completeTaskAction(formData: FormData): Promise<void> {
     .eq('id', parsedTaskId.data)
     .eq('user_id', user.id)
     .in('status', [...OPEN_TASK_STATUSES])
-    .select('id')
+    .select(COMPLETED_TASK_SELECT)
     .maybeSingle()
 
-  redirectWithNotice(error || !data ? 'record-not-found' : 'task-completed')
+  if (error || !data) redirectWithNotice('record-not-found')
+  // Repeating tasks get their next occurrence (only from the request that completed this one).
+  const { data: profile } = await supabase.from('profiles').select('timezone').eq('id', user.id).maybeSingle()
+  const spawned = await createNextOccurrence(supabase, user.id, data as CompletedTask, normalizeTimeZone(profile?.timezone))
+  redirectWithNotice(spawned ? 'task-completed-repeat' : 'task-completed')
 }
 
 export async function createHabitAction(formData: FormData): Promise<void> {

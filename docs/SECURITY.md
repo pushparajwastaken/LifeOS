@@ -39,6 +39,8 @@
 
 - Physical (M9): every exercise and set write first checks that the workout (and the exercise) belongs to the signed-in user; deletes go through a fixed map of four tables (own-property check, so no other table name can be reached) and filter by `user_id`; entries can't be dated in the future. Verified on staging by replaying another user's form.
 
+- Pillar pages (2026-11-28): every child write (reading sessions, topics, cards, assessments, mistakes, milestones, project tasks, note tags and links) first loads its parent by id and `user_id` on the server; optional references (topic, project, milestone, note) are checked to belong to the same user and parent; URLs accept http(s) only; deletes of log entries use fixed table maps with own-property checks. Verified on staging by replaying another user's forms.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.

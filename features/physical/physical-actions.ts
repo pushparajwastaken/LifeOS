@@ -6,7 +6,7 @@ import { getLocalDateKey } from '@/features/habits/habit-domain'
 import { zonedLocalToUtcIso } from '@/features/learning/learning-domain'
 import { uuidSchema } from '@/features/quests/quest-domain'
 import { getPageSession } from '@/lib/page-session'
-import { PHYSICAL_LIMITS, bodyInputSchema, exerciseInputSchema, runInputSchema, setInputSchema, sleepInputSchema, workoutInputSchema } from './physical-domain'
+import { PHYSICAL_LIMITS, bodyInputSchema, measurementsFor, exerciseInputSchema, runInputSchema, setInputSchema, sleepInputSchema, workoutInputSchema } from './physical-domain'
 
 const HOME = '/physical'
 
@@ -107,12 +107,12 @@ export async function logRunAction(formData: FormData): Promise<void> {
 }
 
 export async function logBodyAction(formData: FormData): Promise<void> {
-  const parsed = bodyInputSchema.safeParse({ date: text(formData, 'date'), time: text(formData, 'time'), weight: text(formData, 'weight'), unit: text(formData, 'unit') || 'kg', notes: text(formData, 'notes') })
+  const parsed = bodyInputSchema.safeParse({ date: text(formData, 'date'), time: text(formData, 'time'), weight: text(formData, 'weight'), unit: text(formData, 'unit') || 'kg', waist: text(formData, 'waist'), chest: text(formData, 'chest'), hips: text(formData, 'hips'), body_fat: text(formData, 'body_fat'), notes: text(formData, 'notes') })
   if (!parsed.success) finish(HOME, 'body-invalid', '#log')
   const { supabase, userId, timeZone } = await session()
   const measuredAt = instant(parsed.data.date, parsed.data.time, timeZone)
   if (!measuredAt) finish(HOME, 'physical-future', '#log')
-  const { error } = await supabase.from('body_metrics').insert({ user_id: userId, measured_at: measuredAt, weight: parsed.data.weight, weight_unit: parsed.data.unit, notes: parsed.data.notes })
+  const { error } = await supabase.from('body_metrics').insert({ user_id: userId, measured_at: measuredAt, weight: parsed.data.weight, weight_unit: parsed.data.unit, measurements: measurementsFor(parsed.data), notes: parsed.data.notes })
   finish(HOME, error ? 'save-failed' : 'body-logged')
 }
 

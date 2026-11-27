@@ -7,6 +7,8 @@ import { uuidSchema } from '@/features/quests/quest-domain'
 import { getPageSession } from '@/lib/page-session'
 import { TASK_INTENTS, TASK_TRANSITIONS, dueWallClock, safeTasksReturn, taskInputSchema, type TaskIntent } from './task-domain'
 import { getTaskStatusUpdate } from './task-status'
+import { recurrenceFor } from './task-recurrence'
+import { COMPLETED_TASK_SELECT, createNextOccurrence, type CompletedTask } from './task-recurrence-server'
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name)
@@ -29,6 +31,7 @@ function parseInput(formData: FormData) {
     dueDate: text(formData, 'dueDate'),
     dueTime: text(formData, 'dueTime'),
     estimatedMinutes: text(formData, 'estimatedMinutes'),
+    repeat: text(formData, 'repeat') || 'none',
   })
 }
 
@@ -41,6 +44,7 @@ function columns(input: NonNullable<ReturnType<typeof parseInput>['data']>, time
     pillar: input.pillar,
     due_at: due ? zonedLocalToUtcIso(due.date, due.time, timeZone) : null,
     estimated_minutes: input.estimatedMinutes,
+    recurrence: recurrenceFor(input.repeat),
   }
 }
 
@@ -72,11 +76,15 @@ export async function setTaskStatusAction(formData: FormData): Promise<void> {
   const intent = text(formData, 'intent') as TaskIntent
   if (!taskId.success || !(TASK_INTENTS as readonly string[]).includes(intent)) done(returnTo, 'record-not-found')
   const transition = TASK_TRANSITIONS[intent]
-  const { supabase, userId } = await getPageSession()
+  const { supabase, userId, timeZone } = await getPageSession()
   const { data, error } = await supabase.from('tasks').update(getTaskStatusUpdate(transition.to, new Date()))
-    .eq('id', taskId.data).eq('user_id', userId).in('status', [...transition.from]).select('id').maybeSingle()
+    .eq('id', taskId.data).eq('user_id', userId).in('status', [...transition.from]).select(COMPLETED_TASK_SELECT).maybeSingle()
   if (error) done(returnTo, 'save-failed')
-  if (data) done(returnTo, `task-${intent}`)
+  if (data) {
+    // Only the request that actually completed the task creates the next occurrence, so a double click makes one.
+    const spawned = intent === 'complete' && await createNextOccurrence(supabase, userId, data as CompletedTask, timeZone)
+    done(returnTo, spawned ? 'task-complete-repeat' : `task-${intent}`)
+  }
   // Nothing matched: a repeated submit (already in the target status) is reported as done; anything else changed meanwhile.
   const { data: current } = await supabase.from('tasks').select('status').eq('id', taskId.data).eq('user_id', userId).maybeSingle()
   done(returnTo, !current ? 'record-not-found' : current.status === transition.to ? `task-${intent}` : 'task-unchanged')

@@ -4,6 +4,8 @@ import test from 'node:test'
 import {
   PHYSICAL_LIMITS,
   bodyInputSchema,
+  describeMeasurements,
+  measurementsFor,
   formatClock,
   formatPace,
   parseDurationSeconds,
@@ -51,8 +53,17 @@ test('workout, run, body and sleep input', () => {
   for (const bad of [{ distance: '0' }, { distance: '-1' }, { distance: '5.123' }, { duration: '0' }, { duration: '1:99' }, { unit: 'yd' }, { date: '2026-02-30' }, { time: '25:00' }]) {
     assert.equal(runInputSchema.safeParse({ date: '2026-11-27', time: '', distance: '5', unit: 'km', duration: '30', notes: '', ...bad }).success, false, JSON.stringify(bad))
   }
-  assert.equal(bodyInputSchema.parse({ date: '2026-11-27', time: '', weight: '72.4', unit: 'kg', notes: '' }).weight, 72.4)
-  assert.equal(bodyInputSchema.safeParse({ date: '2026-11-27', time: '', weight: '0', unit: 'kg', notes: '' }).success, false)
+  const body = { date: '2026-11-27', time: '', weight: '', unit: 'kg', waist: '', chest: '', hips: '', body_fat: '', notes: '' }
+  assert.equal(bodyInputSchema.parse({ ...body, weight: '72.4' }).weight, 72.4)
+  assert.equal(bodyInputSchema.safeParse({ ...body, weight: '0' }).success, false)
+  assert.equal(bodyInputSchema.safeParse(body).success, false) // nothing entered
+  assert.equal(bodyInputSchema.parse({ ...body, waist: '81.5' }).weight, null) // measurements alone are fine
+  assert.equal(bodyInputSchema.safeParse({ ...body, body_fat: '80' }).success, false)
+  assert.deepEqual(measurementsFor({ unit: 'kg', waist: 81.5, chest: null, hips: null, body_fat: 18 }), { waist: 81.5, body_fat: 18, length_unit: 'cm' })
+  assert.deepEqual(measurementsFor({ unit: 'lb', waist: null, chest: null, hips: null, body_fat: 18 }), { body_fat: 18 })
+  assert.equal(describeMeasurements({ waist: 32, length_unit: 'in', body_fat: 18.5 }), 'Waist 32 in · Body fat 18.5%')
+  assert.equal(describeMeasurements({ waist: 'drop table', evil: 1 }), null)
+  assert.equal(describeMeasurements(null), null)
   assert.deepEqual(sleepInputSchema.parse({ date: '2026-11-26', hours: '7', minutes: '', recovery: '', notes: '' }), { date: '2026-11-26', hours: 7, minutes: 0, recovery: null, notes: null })
   for (const bad of [{ hours: '25' }, { hours: '24', minutes: '1' }, { minutes: '60' }, { recovery: '101' }, { hours: '' }]) {
     assert.equal(sleepInputSchema.safeParse({ date: '2026-11-26', hours: '7', minutes: '30', recovery: '80', notes: '', ...bad }).success, false, JSON.stringify(bad))

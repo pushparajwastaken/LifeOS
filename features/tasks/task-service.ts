@@ -1,6 +1,7 @@
 import type { createClient } from '@/lib/supabase/server'
 import { utcToZonedParts } from '@/features/learning/learning-domain'
 import { TASK_LIMITS, escapeLikePattern, type TaskFilters } from './task-domain'
+import { readRepeat, type TaskRepeat } from './task-recurrence'
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
 
@@ -16,17 +17,18 @@ export type TaskView = {
   dueDate: string | null
   dueTime: string | null
   estimatedMinutes: number | null
+  repeat: TaskRepeat
   completedAt: string | null
   createdAt: string
 }
 
 export type TasksPageData = { tasks: TaskView[]; counts: { open: number; done: number }; truncated: boolean; hasLoadError: boolean }
 
-const SELECT = 'id,title,description,status,priority,pillar,due_at,estimated_minutes,completed_at,created_at'
+const SELECT = 'id,title,description,status,priority,pillar,due_at,estimated_minutes,recurrence,completed_at,created_at'
 
 type TaskRow = {
   id: string; title: string; description: string | null; status: string; priority: string; pillar: string | null
-  due_at: string | null; estimated_minutes: number | null; completed_at: string | null; created_at: string
+  due_at: string | null; estimated_minutes: number | null; recurrence: unknown; completed_at: string | null; created_at: string
 }
 
 export async function getTasksPageData(supabase: Supabase, userId: string, filters: TaskFilters, timeZone: string): Promise<TasksPageData> {
@@ -58,6 +60,7 @@ export async function getTasksPageData(supabase: Supabase, userId: string, filte
       dueDate: due?.date ?? null,
       dueTime: due?.time ?? null,
       estimatedMinutes: row.estimated_minutes,
+      repeat: readRepeat(row.recurrence),
       completedAt: row.completed_at,
       createdAt: row.created_at,
     }

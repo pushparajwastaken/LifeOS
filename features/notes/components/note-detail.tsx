@@ -6,9 +6,11 @@ import styles from '@/features/quests/quests.module.css'
 import { deleteNoteAction, linkNoteToQuestAction, unlinkNoteFromQuestAction, updateNoteAction } from '../note-actions'
 import { NOTE_TYPE_LABELS, isSafeHttpUrl } from '../note-domain'
 import type { NoteDetailData } from '../note-service'
+import type { NoteConnections } from '../note-connections'
+import { NoteConnectionsPanel } from './note-connections-panel'
 import { NoteEditorForm } from './note-editor-form'
 
-export function NoteDetail({ data, timeZone, notice }: { data: NoteDetailData; timeZone: string; notice?: string }) {
+export function NoteDetail({ data, connections, timeZone, notice }: { data: NoteDetailData; connections: NoteConnections; timeZone: string; notice?: string }) {
   const { note } = data
   const message = resolveNotice(notice)
   const returnTo = `/knowledge/${note.id}`
@@ -75,6 +77,8 @@ export function NoteDetail({ data, timeZone, notice }: { data: NoteDetailData; t
               </form>
             ) : null}
           </section>
+
+          <NoteConnectionsPanel noteId={note.id} data={connections} />
 
           <section className={`${styles.panel} ${styles.dangerZone}`} aria-label="Delete note">
             <details>

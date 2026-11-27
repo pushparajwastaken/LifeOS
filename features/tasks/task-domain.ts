@@ -2,6 +2,7 @@
 // Pure TypeScript with no app imports (node:test loads it directly). Status values come from task-status.ts's
 // contract and are repeated here only as literals checked by tests/task-domain.test.mjs.
 import { z } from 'zod'
+import { TASK_REPEATS } from './task-recurrence.ts'
 
 export const TASK_LIMITS = { title: 200, description: 2000, maxEstimate: 1440, listCap: 300 } as const
 export const TASK_PRIORITIES = ['high', 'medium', 'low'] as const
@@ -39,6 +40,7 @@ export const taskInputSchema = z.object({
   dueTime: z.string().trim().refine((value) => value === '' || TIME.test(value), 'Invalid time'),
   estimatedMinutes: z.string().trim().refine((value) => value === '' || (/^\d{1,4}$/.test(value) && Number(value) >= 1 && Number(value) <= TASK_LIMITS.maxEstimate), 'Invalid estimate')
     .transform((value) => (value === '' ? null : Number(value))),
+  repeat: z.enum(TASK_REPEATS).default('none'),
 })
 
 export type TaskInput = z.output<typeof taskInputSchema>

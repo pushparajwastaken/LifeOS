@@ -10,7 +10,7 @@ import { SubmitButton } from '@/features/quests/components/submit-button'
 import { resolveNotice } from '@/features/quests/quest-notices'
 import styles from '@/features/quests/quests.module.css'
 import { deletePhysicalEntryAction, logBodyAction, logRunAction, logSleepAction, logWorkoutAction } from '../physical-actions'
-import { PHYSICAL_LIMITS, formatClock, formatNumber, formatPace } from '../physical-domain'
+import { MEASUREMENT_FIELDS, PHYSICAL_LIMITS, describeMeasurements, formatClock, formatNumber, formatPace } from '../physical-domain'
 import type { ActivityItem, PhysicalData } from '../physical-service'
 
 type Props = { data: PhysicalData; today: string; timeZone: string; nowTime: string; notice?: string }
@@ -57,7 +57,7 @@ function describe(item: ActivityItem, timeZone: string): { title: string; meta: 
       : { title: item.workout.title, meta: [time, item.exerciseCount ? `${item.exerciseCount} ${item.exerciseCount === 1 ? 'exercise' : 'exercises'}` : 'No exercises logged'].join(' · '), href: `/physical/workouts/${item.id}` }
   }
   if (item.kind === 'run') return { title: `Run · ${formatNumber(item.run.distance, 2)} ${item.run.distance_unit}`, meta: [time, formatClock(item.run.duration_seconds), formatPace(item.run.duration_seconds, item.run.distance, item.run.distance_unit), item.run.notes].filter(Boolean).join(' · ') }
-  if (item.kind === 'body') return { title: `Weight · ${item.body.weight === null ? '—' : `${formatNumber(item.body.weight)} ${item.body.weight_unit}`}`, meta: [time, item.body.notes].filter(Boolean).join(' · ') }
+  if (item.kind === 'body') return { title: item.body.weight === null ? 'Measurements' : `Weight · ${formatNumber(item.body.weight)} ${item.body.weight_unit}`, meta: [time, describeMeasurements(item.body.measurements), item.body.notes].filter(Boolean).join(' · ') }
   return { title: `Sleep · ${hours(item.sleep.duration_minutes)}`, meta: [item.sleep.recovery_score !== null ? `Recovery ${item.sleep.recovery_score}/100` : null, item.sleep.notes].filter(Boolean).join(' · ') }
 }
 
@@ -146,11 +146,16 @@ export function PhysicalOverview({ data, today, timeZone, nowTime, notice }: Pro
             </form>
           </details>
           <details className={a.tile}>
-            <summary className={styles.itemTitle}><strong>Body weight</strong></summary>
+            <summary className={styles.itemTitle}><strong>Body weight and measurements</strong></summary>
             <form action={logBodyAction} className={styles.editorForm}>
               <Field><FieldLabel htmlFor="body-weight">Weight</FieldLabel>
-                <span style={{ display: 'flex', gap: 8 }}><Input id="body-weight" name="weight" inputMode="decimal" required maxLength={8} placeholder="72.4" />
+                <span style={{ display: 'flex', gap: 8 }}><Input id="body-weight" name="weight" inputMode="decimal" maxLength={8} placeholder="72.4" />
                   <select name="unit" aria-label="Weight unit" className={styles.nativeSelect} style={{ width: 'auto' }} defaultValue={data.latestWeight?.unit ?? 'kg'}><option value="kg">kg</option><option value="lb">lb</option></select></span></Field>
+              <div className={styles.fieldGrid}>
+                {MEASUREMENT_FIELDS.map(({ key, label }) => (
+                  <Field key={key}><FieldLabel htmlFor={`body-${key}`}>{label}{key === 'body_fat' ? '' : ' (cm, or in with lb)'}</FieldLabel><Input id={`body-${key}`} name={key} inputMode="decimal" maxLength={6} /></Field>
+                ))}
+              </div>
               <DateTimeFields prefix="body" today={today} nowTime={nowTime} />
               <Field><FieldLabel htmlFor="body-notes">Notes</FieldLabel><Textarea id="body-notes" name="notes" maxLength={PHYSICAL_LIMITS.notes} rows={2} /></Field>
               <div className={styles.editorFooter}><SubmitButton pendingLabel="Saving…">Save weight</SubmitButton></div>
@@ -169,7 +174,7 @@ export function PhysicalOverview({ data, today, timeZone, nowTime, notice }: Pro
                 const info = describe(item, timeZone)
                 return (
                   <li key={`${item.kind}-${item.id}`} className={styles.checkItem}>
-                    <span className={styles.statusBadge}>{item.kind === 'workout' ? (item.workout.rest_day ? 'Rest' : 'Workout') : item.kind === 'run' ? 'Run' : item.kind === 'body' ? 'Weight' : 'Sleep'}</span>
+                    <span className={styles.statusBadge}>{item.kind === 'workout' ? (item.workout.rest_day ? 'Rest' : 'Workout') : item.kind === 'run' ? 'Run' : item.kind === 'body' ? 'Body' : 'Sleep'}</span>
                     <span className={styles.itemTitle}>{info.href ? <Link href={info.href}>{info.title}</Link> : info.title}{info.meta ? <span className={styles.itemMeta}>{info.meta}</span> : null}</span>
                     <form action={deletePhysicalEntryAction}>
                       <input type="hidden" name="kind" value={item.kind} />

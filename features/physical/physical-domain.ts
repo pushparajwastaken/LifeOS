@@ -83,7 +83,56 @@ export const runInputSchema = z.object({
   notes,
 })
 
-export const bodyInputSchema = z.object({ date, time, weight: decimal(PHYSICAL_LIMITS.maxWeight, false), unit: z.enum(WEIGHT_UNITS), notes })
+const optionalMeasure = (max: number) => z.string().trim().transform((value, ctx) => {
+  if (value === '') return null
+  const parsed = decimal(max, false).safeParse(value)
+  if (!parsed.success) { ctx.addIssue({ code: 'custom', message: 'Invalid number' }); return z.NEVER }
+  return parsed.data
+})
+
+/** Body measurements kept in body_metrics.measurements (lengths in cm with kg, inches with lb). */
+export const MEASUREMENT_FIELDS = [
+  { key: 'waist', label: 'Waist', max: 400 },
+  { key: 'chest', label: 'Chest', max: 400 },
+  { key: 'hips', label: 'Hips', max: 400 },
+  { key: 'body_fat', label: 'Body fat %', max: 75 },
+] as const
+export type MeasurementKey = (typeof MEASUREMENT_FIELDS)[number]['key']
+
+/** Weight, measurements, or both; at least one value is required. */
+export const bodyInputSchema = z.object({
+  date, time,
+  weight: z.string().trim().transform((value, ctx) => {
+    if (value === '') return null
+    const parsed = decimal(PHYSICAL_LIMITS.maxWeight, false).safeParse(value)
+    if (!parsed.success) { ctx.addIssue({ code: 'custom', message: 'Invalid weight' }); return z.NEVER }
+    return parsed.data
+  }),
+  unit: z.enum(WEIGHT_UNITS),
+  waist: optionalMeasure(400), chest: optionalMeasure(400), hips: optionalMeasure(400), body_fat: optionalMeasure(75),
+  notes,
+}).refine((input) => input.weight !== null || input.waist !== null || input.chest !== null || input.hips !== null || input.body_fat !== null, { message: 'Enter at least one value', path: ['weight'] })
+
+/** The measurements object stored with an entry (only the values that were entered, plus the length unit). */
+export function measurementsFor(input: { unit: WeightUnit; waist: number | null; chest: number | null; hips: number | null; body_fat: number | null }): Record<string, number | string> {
+  const out: Record<string, number | string> = {}
+  for (const { key } of MEASUREMENT_FIELDS) if (input[key] !== null) out[key] = input[key] as number
+  if (out.waist !== undefined || out.chest !== undefined || out.hips !== undefined) out.length_unit = input.unit === 'lb' ? 'in' : 'cm'
+  return out
+}
+
+/** Readable summary of stored measurements, ignoring anything unexpected in the JSON. */
+export function describeMeasurements(value: unknown): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  const lengthUnit = record.length_unit === 'in' ? 'in' : 'cm'
+  const parts = MEASUREMENT_FIELDS.flatMap(({ key, label }) => {
+    const number = record[key]
+    if (typeof number !== 'number' || !Number.isFinite(number)) return []
+    return [key === 'body_fat' ? `${label.replace(' %', '')} ${formatNumber(number)}%` : `${label} ${formatNumber(number)} ${lengthUnit}`]
+  })
+  return parts.length ? parts.join(' · ') : null
+}
 
 export const sleepInputSchema = z.object({
   date,

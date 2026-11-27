@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BookOpen, CalendarDays, Check, CheckCheck, Flag, LineChart, ListChecks } from 'lucide-react'
+import { BookOpen, CalendarDays, Check, CheckCheck, Dumbbell, Flag, LineChart, ListChecks } from 'lucide-react'
 import { formatMinutes } from '@/features/analytics/analytics-domain'
 import {
   FocusPanel,
@@ -85,6 +85,11 @@ export function DashboardOverview({
             <span><CalendarDays size={15} aria-hidden="true" /> Days with learning</span>
             <strong>{data.week.learningDays.thisWeek}<small> / 7</small></strong>
             <small className="dashboard-week-note">Last week: {data.week.learningDays.lastWeek}</small>
+          </div>
+          <div className="dashboard-summary-item">
+            <span><Dumbbell size={15} aria-hidden="true" /> Workouts</span>
+            <strong>{data.week.workouts.thisWeek}</strong>
+            <small className="dashboard-week-note">Last week: {data.week.workouts.lastWeek}</small>
           </div>
         </div>
         {data.week.truncated ? <p className="dashboard-week-note">Very busy fortnight: some records were not counted.</p> : null}

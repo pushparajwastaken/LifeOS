@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 const noticeMessages: Record<string, string> = {
   'task-added': 'Your task was added to the queue.',
   'task-completed': 'Task marked complete.',
+  'task-completed-repeat': 'Task marked complete. The next one has been added.',
   'habit-created': 'Your new habit is ready for a check-in.',
   'habit-saved': 'Today’s habit check-in was saved.',
   'habit-cleared': 'Today’s habit check-in was cleared.',

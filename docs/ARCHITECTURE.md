@@ -23,7 +23,7 @@ tests/                  node:test unit and static tests; tests/integration/ for 
 - **Reads** happen in server components via service functions. **Writes** happen in server actions. There is no REST API.
 - **Validation**: every action parses input with zod and re-checks ownership on the server (`getOwned…`) before writing; every query also filters by `user_id`.
 - **Feedback**: actions redirect with a `?notice=` code; each page maps codes to messages (`features/quests/quest-notices.ts`).
-- **Domain modules stay import-free** (except `zod`) so tests run with plain `node --test`. Constants that mirror database check constraints have contract tests that read the migration file.
+- **Domain modules stay import-free** (except `zod` and other domain modules imported with an explicit `.ts` extension, allowed by `allowImportingTsExtensions`) so tests run with plain `node --test`. Shared pillar helpers: `features/pillars/pillar-domain.ts` (validation, dates, plurals) and `features/pillars/pillar-actions-kit.ts` (server-only form and redirect helpers). Constants that mirror database check constraints have contract tests that read the migration file.
 - **No service-role key** in the application. All database access runs as the signed-in user under RLS.
 
 ## Environments and migrations
