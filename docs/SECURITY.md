@@ -31,6 +31,8 @@
 
 - Tasks page (M9): every write goes through server actions that validate with zod, scope by `user_id` (RLS still applies), only move a task between allowed statuses, accept return paths only on `/tasks`, and escape LIKE wildcards in search.
 
+- Goals (M9): every child write (readings, milestones, status) first loads the goal by id and `user_id` on the server; the composite `(goal_id, user_id)` foreign keys and RLS enforce the same in the database. Verified on staging by replaying another user's form.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.

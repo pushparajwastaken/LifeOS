@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { ArrowUpRight, BookOpen, CalendarDays, Dumbbell, FolderKanban, Goal, MessageCircle, Sparkles } from 'lucide-react'
+import { ArrowUpRight, BookOpen, CalendarDays, Dumbbell, FolderKanban, MessageCircle, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { AuthenticatedAppShell } from '@/components/layout/authenticated-app-shell'
 
@@ -10,7 +10,6 @@ const sections: Record<string, { title: string; category: string; description: s
   academic: { title: 'Academic', category: 'Development pillar', description: 'Turn focused study into durable understanding and meaningful progress.', icon: Sparkles, phase: 'Phase 4' },
   professional: { title: 'Professional', category: 'Development pillar', description: 'Move important work forward and make your output visible to yourself.', icon: FolderKanban, phase: 'Phase 4' },
   communication: { title: 'Communication', category: 'Development pillar', description: 'Practice clearer expression, deeper listening and stronger connection.', icon: MessageCircle, phase: 'Phase 4' },
-  goals: { title: 'Goals', category: 'Growth & reflection', description: 'Give your longer-term intentions a direction, a measure and a history.', icon: Goal, phase: 'Phase 5' },
   reviews: { title: 'Weekly reviews', category: 'Growth & reflection', description: 'Reflect on the week behind you and make a deliberate plan for the week ahead.', icon: BookOpen, phase: 'Phase 3' },
 }
 
