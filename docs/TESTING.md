@@ -15,6 +15,8 @@ node --test tests/*.test.mjs
 | `resource-domain.test.mjs` | URL canonicalization (unsafe schemes, host/query/port normalisation, tracking params, YouTube and X variants), type detection, validation, filters |
 | `resource-library-migration.test.mjs` | Static allowlist for M3 including the permitted changes to M2 objects; constants vs SQL; dedup and FK rules |
 | `analytics-domain.test.mjs` | Metric catalogue vs the contract (kinds, reasons, groups), Monday weeks and 12-week window, timezone and DST dates, weekly counts/sums/distinct days, blank (null) rates, on-time rule, breakdowns, footnotes; module importable without the bundler |
+| `extension-lib.test.mjs` | Extension helpers (folder listing, http(s)-only collection, duplicates, limits), page-message protocol, exact origin checks, build-script origin validation and manifest permissions, and the real content script run against stubbed `window`/`chrome` (own window and origin only, own extension only, inert elsewhere) |
+| `extension-payload.test.mjs` | Server-side validation of extension payloads: schema, size and count limits, unsafe schemes, re-canonicalisation and de-duplication, text cleaning |
 | `bookmark-parser.test.mjs` | Netscape bookmark parsing: folders, entities, unsafe schemes skipped, in-file duplicates, limits, non-bookmark input |
 | `resource-imports-migration.test.mjs` | Static allowlist for M4; only change to an existing table is `resource_source_records.import_run_id`; constants vs SQL |
 | `side-quests-migration.test.mjs` | Static allowlist: every statement in the M1 migration matches an approved shape; legacy tables untouched; RLS, policies, grants, triggers present; every FK includes `user_id` |
@@ -59,6 +61,8 @@ Run in one transaction that ends with a deliberate exception (nothing persists):
 Rolled back: duplicate canonical URL per user rejected (other users allowed); javascript: URL rejected; origin change rejected; completed without timestamp rejected; cross-user link rejected; view exposes resource_id; TRUNCATE rejected; deleting a quest keeps resources; deleting a resource keeps sessions (including a soft-deleted one, which stays deleted) and removes source records.
 
 ## Browser QA (staging)
+M7 was checked on `/library/import` with the built `config.js`, `lib.js` and `content.js` loaded into the page and the service worker and approval window replaced by a stub: "not installed" state, detection, deny, cancel, a forged result with an unknown request id (ignored), approve (staged with the existing link flagged, markup in a title shown as text), confirm (resources saved with `origin = chrome_extension`, existing resource unchanged, provenance recorded, candidates removed), forged invalid payloads rejected by the server, 375px layout. **Not yet done:** loading `extension/dist` in a real Chrome profile (permission prompt, approval window, `documentId` delivery).
+
 M5 was checked with a seeded user whose expected figures were worked out by hand (tasks on time and late, overdue, goal milestones and progress, a daily habit with rest and skipped days, quest sessions plus a soft-deleted one, weekly target, resources, an import with duplicates, structured quest progress) and a second user who must see only empty states. Also checked: 375px layout without horizontal scrolling.
 
 M4 was exercised with a sample export: preview counts and skips, in-file and library duplicates, script-like titles rendered as text, empty selection, confirm with partial selection, re-import, cancel, non-bookmark/empty/oversize files, and the 375px layout.

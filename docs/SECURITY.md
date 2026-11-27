@@ -27,6 +27,8 @@
 
 - M5 analytics only reads data: no new tables, functions or grants. Every query filters by `user_id` under the user's own session (RLS still applies), and the browser check confirmed a second user sees none of the first user's figures.
 
+- M7 Chrome extension: no host permissions, no `tabs`, no `externally_connectable`; the `bookmarks` permission is optional, requested only from the extension's own approval window and can be given back after each send. The content script runs only on origins fixed at build time (https, or http for localhost) and relays only well-formed messages from its own window and origin. Requests are accepted only from a top frame of an allowlisted origin; results go only to the requesting tab and document and are accepted by the page only for its own random request id. Extension pages use `script-src 'self'` and set text with `textContent`. The server treats the payload as untrusted (zod, 5 MB and 5,000-link limits, http(s) only, re-canonicalised), and nothing is saved until the user confirms the review. Another extension on the same page could post fake results; the worst case is extra links in a review the user must still confirm.
+
 ## Known items
 - Production Auth: "leaked password protection" is disabled (Auth setting, owner decision).
 - Performance advisor: RLS policies call `auth.uid()` per row (lint 0003) across all tables; switching to `(select auth.uid())` should be done for every table together in a dedicated migration.

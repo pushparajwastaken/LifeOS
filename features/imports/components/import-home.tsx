@@ -5,6 +5,7 @@ import { SubmitButton } from '@/features/quests/components/submit-button'
 import { resolveNotice } from '@/features/quests/quest-notices'
 import styles from '@/features/quests/quests.module.css'
 import { stageChromeImportAction } from '../import-actions'
+import { ExtensionImport } from './extension-import'
 import type { ImportRun } from '../import-service'
 
 export const RUN_STATUS_LABELS: Record<ImportRun['status'], string> = {
@@ -44,6 +45,8 @@ export function ImportHome({ runs, hasLoadError, timeZone, notice }: { runs: Imp
         </form>
       </section>
 
+      <ExtensionImport />
+
       <section className={styles.panel} aria-labelledby="history-title">
         <div className={styles.sectionHeader}><div><p className={styles.kicker}>IMPORT HISTORY</p><h2 id="history-title">Previous imports</h2></div></div>
         {runs.length > 0 ? (
@@ -51,7 +54,7 @@ export function ImportHome({ runs, hasLoadError, timeZone, notice }: { runs: Imp
             {runs.map((run) => (
               <li key={run.id} className={styles.linkRow}>
                 <span>
-                  <Link href={`/library/import/${run.id}`}>{run.file_name ?? 'Bookmarks file'}</Link>
+                  <Link href={`/library/import/${run.id}`}>{run.file_name ?? (run.provider === 'chrome_extension' ? 'Chrome bookmarks (extension)' : 'Bookmarks file')}</Link>
                   <span className={styles.itemMeta}>
                     {dateFormat.format(new Date(run.created_at))} · {run.items_staged} unique links
                     {run.status === 'completed' ? ` · ${run.items_imported} imported · ${run.items_duplicate} already saved` : ''}

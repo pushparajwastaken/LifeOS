@@ -34,7 +34,7 @@ export function ImportReview({ data, timeZone, notice }: { data: ImportRunData; 
           <p className={styles.kicker}>{run.status === 'staged' ? 'STEP 2 OF 2 · REVIEW' : 'IMPORT SUMMARY'} · {run.file_name?.toUpperCase() ?? 'BOOKMARKS FILE'}</p>
           <h1>{run.status === 'staged' ? 'Choose what to import.' : RUN_STATUS_LABELS[run.status]}</h1>
           <p className={styles.heroCopy}>
-            {run.items_seen} links in the file · {run.items_staged} unique and importable · {run.items_skipped} skipped (bookmarklets, browser-internal links or repeats)
+            {run.items_seen} links {run.provider === 'chrome_extension' ? 'received from the extension' : 'in the file'} · {run.items_staged} unique and importable · {run.items_skipped} skipped (bookmarklets, browser-internal links or repeats)
             {run.status === 'staged' ? ` · ${newCount} new, ${candidates.length - newCount} already in your library` : ''}
           </p>
         </div>
@@ -49,12 +49,12 @@ export function ImportReview({ data, timeZone, notice }: { data: ImportRunData; 
           <dl className={styles.factList}>
             <dt>New resources</dt><dd>{run.items_imported}</dd>
             <dt>Already in your library</dt><dd>{run.items_duplicate} (left unchanged, provenance recorded)</dd>
-            <dt>Skipped in the file</dt><dd>{run.items_skipped}</dd>
+            <dt>Skipped (unsupported links or repeats)</dt><dd>{run.items_skipped}</dd>
             <dt>Finished</dt><dd>{run.completed_at ? dateFormat.format(new Date(run.completed_at)) : '—'}</dd>
           </dl>
           <div className={styles.inlineForm}>
             <Link href="/library" className={styles.primaryLink}>Open library</Link>
-            <Link href="/library/import" className={styles.subtleLink}>Import another file</Link>
+            <Link href="/library/import" className={styles.subtleLink}>Import more bookmarks</Link>
           </div>
         </section>
       ) : run.status !== 'staged' ? (

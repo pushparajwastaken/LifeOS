@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LifeOS: send bookmarks?</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main class="panel">
+    <p class="kicker">LIFEOS BOOKMARKS</p>
+    <h1 id="title">Send bookmarks to LifeOS?</h1>
+    <p id="intro" class="muted">Checking the request…</p>
+
+    <section id="grant" hidden>
+      <p>This extension needs permission to read your bookmarks. It can only read them, never change them, and you can give the permission back at any time.</p>
+      <button id="grant-button" type="button" class="primary">Allow reading bookmarks</button>
+    </section>
+
+    <section id="choose" hidden>
+      <div class="row">
+        <h2>Folders to send</h2>
+        <span><button id="select-all" type="button" class="link">All</button> · <button id="select-none" type="button" class="link">None</button></span>
+      </div>
+      <ul id="folders" class="folders"></ul>
+      <label class="check"><input id="revoke" type="checkbox" checked> Give back bookmarks access after sending</label>
+    </section>
+
+    <p id="message" class="muted" role="status"></p>
+
+    <div class="actions">
+      <button id="deny" type="button">Don’t send</button>
+      <button id="send" type="button" class="primary" disabled hidden>Send</button>
+    </div>
+  </main>
+  <script src="config.js"></script>
+  <script src="lib.js"></script>
+  <script src="approve.js"></script>
+</body>
+</html>

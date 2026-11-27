@@ -5,11 +5,14 @@ import { redirect } from 'next/navigation'
 import { getOwnedQuest } from '@/features/quests/quest-service'
 import { canonicalizeUrl, titleFromUrl, type ResourceType } from '@/features/resources/resource-domain'
 import { getPageSession } from '@/lib/page-session'
-import { BOOKMARK_LIMITS, parseBookmarksHtml } from './bookmark-parser'
+import { BOOKMARK_LIMITS, parseBookmarksHtml, type ParseResult } from './bookmark-parser'
+import { parseExtensionPayload } from './extension-payload'
 import { chunk, getOwnedRun, type ImportCandidate } from './import-service'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const IMPORT_HOME = '/library/import'
+const CHROME_PROVIDERS = ['chrome_html', 'chrome_extension'] as const
+type ChromeProvider = (typeof CHROME_PROVIDERS)[number]
 
 function redirectWithNotice(path: string, notice: string): never {
   revalidatePath('/library')
@@ -35,12 +38,27 @@ export async function stageChromeImportAction(formData: FormData): Promise<void>
     redirectWithNotice(IMPORT_HOME, parsed.error === 'too_large' ? 'import-too-large' : parsed.error === 'empty' ? 'import-empty' : 'import-not-bookmarks')
   }
   if (parsed.bookmarks.length === 0) redirectWithNotice(IMPORT_HOME, 'import-empty')
+  await stageParsedBookmarks('chrome_html', safeFileName(file.name), parsed, parsed.truncated ? 'import-staged-truncated' : 'import-staged')
+}
 
+/**
+ * Step 1 (extension): bookmarks chosen and approved in the LifeOS Chrome extension arrive as JSON via the
+ * import page. They are validated and re-canonicalised here, then staged exactly like an uploaded file.
+ */
+export async function stageExtensionImportAction(formData: FormData): Promise<void> {
+  const parsed = parseExtensionPayload(formData.get('payload'), canonicalizeUrl)
+  if ('error' in parsed) {
+    redirectWithNotice(IMPORT_HOME, parsed.error === 'too_large' ? 'import-extension-too-large' : parsed.error === 'empty' ? 'import-empty' : 'import-extension-invalid')
+  }
+  await stageParsedBookmarks('chrome_extension', 'Chrome bookmarks (extension)', parsed, parsed.truncated ? 'import-staged-extension-truncated' : 'import-staged-extension')
+}
+
+async function stageParsedBookmarks(provider: ChromeProvider, fileName: string | null, parsed: ParseResult, successNotice: string): Promise<never> {
   const { supabase, userId } = await getPageSession()
   const { data: run, error: runError } = await supabase.from('import_runs').insert({
     user_id: userId,
-    provider: 'chrome_html',
-    file_name: safeFileName(file.name),
+    provider,
+    file_name: fileName,
     items_seen: parsed.total,
     items_staged: parsed.bookmarks.length,
     items_skipped: parsed.skippedUnsupported + parsed.duplicatesInFile,
@@ -73,7 +91,7 @@ export async function stageChromeImportAction(formData: FormData): Promise<void>
       redirectWithNotice(IMPORT_HOME, 'save-failed')
     }
   }
-  redirectWithNotice(`${IMPORT_HOME}/${run.id}`, parsed.truncated ? 'import-staged-truncated' : 'import-staged')
+  redirectWithNotice(`${IMPORT_HOME}/${run.id}`, successNotice)
 }
 
 async function requireStagedRun(formData: FormData) {
@@ -83,6 +101,7 @@ async function requireStagedRun(formData: FormData) {
   const run = await getOwnedRun(context.supabase, context.userId, runId)
   if (!run) redirectWithNotice(IMPORT_HOME, 'record-not-found')
   if (run.status !== 'staged') redirectWithNotice(`${IMPORT_HOME}/${run.id}`, 'import-not-staged')
+  if (!(CHROME_PROVIDERS as readonly string[]).includes(run.provider)) redirectWithNotice(IMPORT_HOME, 'record-not-found')
   if (new Date(run.expires_at).getTime() <= Date.now()) redirectWithNotice(IMPORT_HOME, 'import-expired')
   return { ...context, run }
 }
@@ -93,6 +112,7 @@ async function requireStagedRun(formData: FormData) {
  */
 export async function confirmImportAction(formData: FormData): Promise<void> {
   const { supabase, userId, run } = await requireStagedRun(formData)
+  const provider = run.provider as ChromeProvider
   const selectedIds = [...new Set(formData.getAll('candidate').filter((v): v is string => typeof v === 'string' && UUID.test(v)))]
   if (selectedIds.length === 0) redirectWithNotice(`${IMPORT_HOME}/${run.id}`, 'import-nothing-selected')
   const questId = formData.get('questId')
@@ -120,7 +140,7 @@ export async function confirmImportAction(formData: FormData): Promise<void> {
         title: candidate.title ?? (canonical.ok ? titleFromUrl(canonical.value) : candidate.canonical_url).slice(0, 500),
         title_source: 'chrome',
         resource_type: candidate.resource_type as ResourceType,
-        origin: 'chrome_html',
+        origin: provider,
       }
     })
     const { data, error } = await supabase.from('learning_resources').upsert(rows, { onConflict: 'user_id,canonical_url', ignoreDuplicates: true }).select('id')
@@ -143,7 +163,7 @@ export async function confirmImportAction(formData: FormData): Promise<void> {
     return resourceId ? [{
       user_id: userId,
       resource_id: resourceId,
-      provider: 'chrome_html',
+      provider,
       external_id: candidate.canonical_url,
       source_url: candidate.url,
       source_title: candidate.title,

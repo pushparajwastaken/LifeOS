@@ -29,3 +29,6 @@ next-env.d.ts
 # supabase cli local state (linked project ref, cached versions)
 supabase/.temp
 supabase/.branches
+
+# built Chrome extension (scripts/build-extension.mjs)
+/extension/dist
