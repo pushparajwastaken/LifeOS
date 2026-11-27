@@ -189,8 +189,8 @@ export function TasksPanel({
           <p className="eyebrow">KEEP IT MOVING</p>
           <h2>More in your queue</h2>
         </div>
-        <Link className="text-link" href="/planner">
-          View planner <ChevronRight size={14} aria-hidden="true" />
+        <Link className="text-link" href="/tasks">
+          All tasks <ChevronRight size={14} aria-hidden="true" />
         </Link>
       </div>
       {tasks.length > 0 ? (

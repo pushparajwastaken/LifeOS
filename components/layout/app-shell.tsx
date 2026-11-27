@@ -22,6 +22,7 @@ import {
   Sun,
   Timer,
   Settings2,
+  ListChecks,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -29,6 +30,7 @@ import { signOutAction } from '@/app/auth/actions'
 
 const primaryLinks = [
   { label: 'Overview', href: '/', icon: LayoutDashboard },
+  { label: 'Tasks', href: '/tasks', icon: ListChecks },
   { label: 'Habits', href: '/habits', icon: Leaf },
   { label: 'Daily planner', href: '/planner', icon: CalendarDays },
 ]
