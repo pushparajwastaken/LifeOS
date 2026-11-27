@@ -23,6 +23,7 @@ import {
   Timer,
   Settings2,
   ListChecks,
+  CalendarRange,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -33,6 +34,7 @@ const primaryLinks = [
   { label: 'Tasks', href: '/tasks', icon: ListChecks },
   { label: 'Habits', href: '/habits', icon: Leaf },
   { label: 'Daily planner', href: '/planner', icon: CalendarDays },
+  { label: 'Calendar', href: '/calendar', icon: CalendarRange },
 ]
 
 function linkIsActive(pathname: string, href: string) {
